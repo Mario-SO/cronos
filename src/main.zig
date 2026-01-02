@@ -37,6 +37,7 @@ const state = struct {
     var add_input_len: usize = 0;
     var add_ignore_next_char: bool = false;
     var view_modal_open: bool = false;
+    var view_selected_index: usize = 0;
     var events: [128]Event = undefined;
     var events_count: usize = 0;
 };
@@ -120,7 +121,7 @@ export fn event(ev: [*c]const sapp.Event) void {
         handleViewModalEvent(ev.*);
         return;
     }
-    if (ev.*.type == .KEY_DOWN and !ev.*.key_repeat) {
+    if (ev.*.type == .KEY_DOWN) {
         switch (ev.*.key_code) {
             .LEFT => shiftMonth(-1),
             .RIGHT => shiftMonth(1),
@@ -371,6 +372,7 @@ fn openAddModal() void {
 fn openViewModal() void {
     state.view_modal_open = true;
     state.add_modal_open = false;
+    state.view_selected_index = 0;
 }
 
 fn goToToday() void {
@@ -416,8 +418,33 @@ fn handleAddModalEvent(ev: sapp.Event) void {
 
 fn handleViewModalEvent(ev: sapp.Event) void {
     if (ev.type == .KEY_DOWN and !ev.key_repeat) {
-        if (ev.key_code == .ESCAPE or ev.key_code == .V) {
-            state.view_modal_open = false;
+        switch (ev.key_code) {
+            .ESCAPE, .V => {
+                state.view_modal_open = false;
+            },
+            .H, .K => {
+                if (state.view_selected_index > 0) {
+                    state.view_selected_index -= 1;
+                }
+            },
+            .J, .L => {
+                const selected_days = daysFromCivil(state.selected.year, state.selected.month, state.selected.day);
+                const total = countEventsForDay(selected_days);
+                if (total > 0 and state.view_selected_index + 1 < total) {
+                    state.view_selected_index += 1;
+                }
+            },
+            .D => {
+                const selected_days = daysFromCivil(state.selected.year, state.selected.month, state.selected.day);
+                deleteEventForDayAt(selected_days, state.view_selected_index);
+                const total = countEventsForDay(selected_days);
+                if (total == 0) {
+                    state.view_selected_index = 0;
+                } else if (state.view_selected_index >= total) {
+                    state.view_selected_index = total - 1;
+                }
+            },
+            else => {},
         }
     }
 }
@@ -556,24 +583,43 @@ fn drawViewEventsOverlay(width: f32, height: f32) void {
     sdtx.print("Events for {s} {d}, {d}", .{ sel_month, state.selected.day, state.selected.year });
 
     const selected_days = daysFromCivil(state.selected.year, state.selected.month, state.selected.day);
+    const max_lines: usize = 10;
+    const total = countEventsForDay(selected_days);
+    var start: usize = 0;
+    if (total > max_lines) {
+        if (state.view_selected_index + 1 > max_lines) {
+            start = state.view_selected_index + 1 - max_lines;
+        }
+        if (start + max_lines > total) {
+            start = total - max_lines;
+        }
+    }
+
     var line_y = box_y + 44.0;
     var shown: usize = 0;
+    var match_index: usize = 0;
     var idx: usize = 0;
-    while (idx < state.events_count and shown < 10) : (idx += 1) {
+    while (idx < state.events_count and shown < max_lines) : (idx += 1) {
         const ev = state.events[idx];
         if (ev.date_days != selected_days) continue;
+        if (match_index < start) {
+            match_index += 1;
+            continue;
+        }
         const title = std.mem.sliceTo(ev.title[0..], 0);
+        const prefix = if (match_index == state.view_selected_index) "> " else "- ";
         sdtx.pos((box_x + 16.0) / 8.0, line_y / 8.0);
-        sdtx.print("- {s}", .{title});
+        sdtx.print("{s}{s}", .{ prefix, title });
         line_y += 14.0;
         shown += 1;
+        match_index += 1;
     }
-    if (shown == 0) {
+    if (total == 0) {
         sdtx.pos((box_x + 16.0) / 8.0, line_y / 8.0);
         sdtx.print("No events.", .{});
     }
     sdtx.pos((box_x + 16.0) / 8.0, (box_y + box_h - 20.0) / 8.0);
-    sdtx.print("Esc or V: close", .{});
+    sdtx.print("H/J/K/L: move  D: delete  Esc or V: close", .{});
 }
 
 fn addEventFromInput() bool {
@@ -590,6 +636,37 @@ fn addEventFromInput() bool {
     ev.title[copy_len] = 0;
     state.events_count += 1;
     return true;
+}
+
+fn countEventsForDay(date_days: i64) usize {
+    var count: usize = 0;
+    var idx: usize = 0;
+    while (idx < state.events_count) : (idx += 1) {
+        if (state.events[idx].date_days == date_days) {
+            count += 1;
+        }
+    }
+    return count;
+}
+
+fn eventIndexForDayPosition(date_days: i64, position: usize) ?usize {
+    var match_index: usize = 0;
+    var idx: usize = 0;
+    while (idx < state.events_count) : (idx += 1) {
+        if (state.events[idx].date_days != date_days) continue;
+        if (match_index == position) return idx;
+        match_index += 1;
+    }
+    return null;
+}
+
+fn deleteEventForDayAt(date_days: i64, position: usize) void {
+    const idx = eventIndexForDayPosition(date_days, position) orelse return;
+    var i = idx;
+    while (i + 1 < state.events_count) : (i += 1) {
+        state.events[i] = state.events[i + 1];
+    }
+    state.events_count -= 1;
 }
 
 fn firstEventTitle(date_days: i64) []const u8 {
