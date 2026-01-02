@@ -103,7 +103,7 @@ pub fn draw(state: *const State, width: f32, height: f32) void {
     }
     sgl.end();
 
-    if (!(state.add_modal_open or state.view_modal_open)) {
+    if (!(state.add_modal_open or state.view_modal_open or state.goto_modal_open)) {
         sdtx.canvas(width, height);
         sdtx.origin(0.0, 0.0);
         sdtx.font(0);

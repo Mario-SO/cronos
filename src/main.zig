@@ -8,6 +8,7 @@ const shortcuts = @import("app/shortcuts.zig");
 const calendar_view = @import("ui/calendar_view.zig");
 const add_modal = @import("ui/modals/add_event.zig");
 const view_modal = @import("ui/modals/view_events.zig");
+const goto_modal = @import("ui/modals/go_to_date.zig");
 const platform = @import("platform/macos_window.zig");
 
 var state: app_state.State = .{};
@@ -28,6 +29,7 @@ export fn frame() void {
     calendar_view.draw(&state, width, height);
     add_modal.draw(&state, width, height);
     view_modal.draw(&state, width, height);
+    goto_modal.draw(&state, width, height);
     render.endFrame();
 }
 
@@ -43,6 +45,10 @@ export fn event(ev: [*c]const sapp.Event) void {
     }
     if (state.view_modal_open) {
         view_modal.handleEvent(&state, ev.*);
+        return;
+    }
+    if (state.goto_modal_open) {
+        goto_modal.handleEvent(&state, ev.*);
         return;
     }
     if (ev.*.type == .KEY_DOWN) {

@@ -13,6 +13,15 @@ pub const State = struct {
     view_selected_index: usize = 0,
     events: [128]cronos.Event = undefined,
     events_count: usize = 0,
+    goto_modal_open: bool = false,
+    goto_focus: u8 = 0, // 0=day, 1=month, 2=year
+    goto_day_input: [4:0]u8 = [_:0]u8{0} ** 4,
+    goto_day_len: usize = 0,
+    goto_month_input: [4:0]u8 = [_:0]u8{0} ** 4,
+    goto_month_len: usize = 0,
+    goto_year_input: [8:0]u8 = [_:0]u8{0} ** 8,
+    goto_year_len: usize = 0,
+    goto_ignore_next_char: bool = false,
 };
 
 pub fn init(state: *State) void {

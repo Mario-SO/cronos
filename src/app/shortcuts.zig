@@ -13,6 +13,7 @@ pub fn handleKeyDown(state: *State, key_code: sapp.Keycode) void {
         .A => commands.openAddModal(state),
         .T => commands.goToToday(state),
         .V => commands.openViewModal(state),
+        .G => commands.openGotoModal(state),
         else => {},
     }
 }

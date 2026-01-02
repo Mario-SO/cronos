@@ -67,3 +67,63 @@ pub fn addEventFromInput(state: *State) bool {
     state.events_count += 1;
     return true;
 }
+
+pub fn openGotoModal(state: *State) void {
+    @memset(state.goto_day_input[0..], 0);
+    @memset(state.goto_month_input[0..], 0);
+    @memset(state.goto_year_input[0..], 0);
+    state.goto_day_len = 0;
+    state.goto_month_len = 0;
+    state.goto_year_len = 0;
+    state.goto_focus = 0;
+    state.goto_ignore_next_char = true;
+    state.goto_modal_open = true;
+    state.add_modal_open = false;
+    state.view_modal_open = false;
+}
+
+fn parseMonth(input: []const u8) ?u8 {
+    const abbrevs = [_]struct { abbr: []const u8, month: u8 }{
+        .{ .abbr = "jan", .month = 1 },
+        .{ .abbr = "feb", .month = 2 },
+        .{ .abbr = "mar", .month = 3 },
+        .{ .abbr = "apr", .month = 4 },
+        .{ .abbr = "may", .month = 5 },
+        .{ .abbr = "jun", .month = 6 },
+        .{ .abbr = "jul", .month = 7 },
+        .{ .abbr = "aug", .month = 8 },
+        .{ .abbr = "sep", .month = 9 },
+        .{ .abbr = "oct", .month = 10 },
+        .{ .abbr = "nov", .month = 11 },
+        .{ .abbr = "dec", .month = 12 },
+    };
+
+    for (abbrevs) |entry| {
+        if (std.ascii.eqlIgnoreCase(input, entry.abbr)) {
+            return entry.month;
+        }
+    }
+    return null;
+}
+
+pub fn goToDateFromInput(state: *State) bool {
+    const day_str = std.mem.sliceTo(state.goto_day_input[0..], 0);
+    const month_str = std.mem.sliceTo(state.goto_month_input[0..], 0);
+    const year_str = std.mem.sliceTo(state.goto_year_input[0..], 0);
+
+    const day = std.fmt.parseInt(u8, day_str, 10) catch return false;
+    const month = parseMonth(month_str) orelse return false;
+
+    const year = if (year_str.len == 0)
+        state.today.year
+    else
+        std.fmt.parseInt(i32, year_str, 10) catch return false;
+
+    const max_day = cronos.calendar.daysInMonth(year, month);
+    if (day < 1 or day > max_day) return false;
+
+    state.selected = .{ .year = year, .month = month, .day = day };
+    state.current_year = year;
+    state.current_month = month;
+    return true;
+}
