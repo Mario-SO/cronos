@@ -101,14 +101,7 @@ pub fn draw(state: *const State, width: f32, height: f32) void {
 
     render.setup2D(width, height);
 
-    // Dim background
-    sgl.beginQuads();
-    sgl.c4f(0.0, 0.0, 0.0, 0.35);
-    sgl.v2f(0.0, 0.0);
-    sgl.v2f(width, 0.0);
-    sgl.v2f(width, height);
-    sgl.v2f(0.0, height);
-    sgl.end();
+    // Note: Background blur is handled by sokol_context when modals are open
 
     // Modal box
     const box_w: f32 = 380.0;

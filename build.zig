@@ -3,6 +3,7 @@ const Build = std.Build;
 const OptimizeMode = std.builtin.OptimizeMode;
 const ResolvedTarget = Build.ResolvedTarget;
 const cimgui = @import("cimgui");
+const sokol = @import("sokol");
 
 pub fn build(b: *Build) !void {
     const target = b.standardTargetOptions(.{});
@@ -32,16 +33,28 @@ pub fn build(b: *Build) !void {
     // inject the cimgui header search path into the sokol C library compile step
     dep_sokol.artifact("sokol_clib").addIncludePath(dep_cimgui.path(cimgui_conf.include_dir));
 
-    // main module with sokol and cimgui imports
+    // Get sokol module and shader compiler
+    const mod_sokol = dep_sokol.module("sokol");
+
+    // Compile blur shader for macOS Metal
+    const blur_shader = sokol.shdc.createModule(b, "blur_shader", mod_sokol, .{
+        .shdc_dep = b.dependency("sokol-tools-bin", .{}),
+        .input = "src/shaders/blur.glsl",
+        .output = "blur.zig",
+        .slang = .{ .metal_macos = true },
+    }) catch @panic("Failed to create blur shader module");
+
+    // main module with sokol, cimgui, and shader imports
     const mod_main = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
         .imports = &.{
-            .{ .name = "sokol", .module = dep_sokol.module("sokol") },
+            .{ .name = "sokol", .module = mod_sokol },
             .{ .name = cimgui_conf.module_name, .module = dep_cimgui.module(cimgui_conf.module_name) },
             .{ .name = "cronos", .module = mod },
             .{ .name = "lib/cronos", .module = mod },
+            .{ .name = "blur_shader", .module = blur_shader },
         },
     });
 

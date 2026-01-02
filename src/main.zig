@@ -26,11 +26,30 @@ export fn frame() void {
     const height = @as(f32, @floatFromInt(height_i));
 
     render.beginFrame(width_i, height_i);
-    calendar_view.draw(&state, width, height);
-    // Draw view_modal first, then event_modal on top (for edit mode layering)
-    view_modal.draw(&state, width, height);
-    add_modal.draw(&state, width, height);
-    goto_modal.draw(&state, width, height);
+
+    // Check if any modal is open
+    const modal_open = state.event_modal_mode != .closed or
+        state.view_modal_open or
+        state.goto_modal_open;
+
+    if (modal_open) {
+        // Render calendar to offscreen texture
+        render.beginScenePass();
+        calendar_view.draw(&state, width, height);
+        render.endScenePass();
+
+        // Apply blur and render blurred background to screen
+        render.renderBlurredBackground(2.0);
+
+        // Draw modals on top of blurred background (they skip their own black overlay)
+        view_modal.draw(&state, width, height);
+        add_modal.draw(&state, width, height);
+        goto_modal.draw(&state, width, height);
+    } else {
+        // Normal rendering path without blur
+        calendar_view.draw(&state, width, height);
+    }
+
     render.endFrame();
 }
 
