@@ -1,4 +1,82 @@
+const std = @import("std");
 const Date = @import("date.zig").Date;
+
+// Month names and abbreviations
+pub const month_names = [_][]const u8{
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+};
+
+pub const month_abbrevs = [_][]const u8{
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
+};
+
+pub const weekday_names = [_][]const u8{
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun",
+};
+
+/// Returns month name for 1-indexed month (1 = January)
+pub fn monthName(month: u8) []const u8 {
+    if (month >= 1 and month <= 12) {
+        return month_names[month - 1];
+    }
+    return "Unknown";
+}
+
+/// Parse a month abbreviation (case-insensitive) and return 1-indexed month
+pub fn parseMonthAbbrev(input: []const u8) ?u8 {
+    for (month_abbrevs, 0..) |abbr, i| {
+        if (std.ascii.eqlIgnoreCase(input, abbr)) {
+            return @intCast(i + 1);
+        }
+    }
+    return null;
+}
+
+/// Check if input is a valid prefix of any month abbreviation
+pub fn isValidMonthPrefix(input: []const u8) bool {
+    if (input.len == 0) return true;
+    for (month_abbrevs) |abbr| {
+        if (input.len <= abbr.len) {
+            var matches = true;
+            for (0..input.len) |i| {
+                if (std.ascii.toLower(input[i]) != abbr[i]) {
+                    matches = false;
+                    break;
+                }
+            }
+            if (matches) return true;
+        }
+    }
+    return false;
+}
 
 pub fn daysInMonth(year: i32, month: u8) u8 {
     return switch (month) {

@@ -1,3 +1,7 @@
+//! Cronos - A minimal calendar application
+//!
+//! Main entry point handling application lifecycle, rendering, and event dispatch.
+
 const sokol = @import("sokol");
 const slog = sokol.log;
 const sapp = sokol.app;
@@ -6,9 +10,7 @@ const render = @import("render/sokol_context.zig");
 const app_state = @import("app/state.zig");
 const shortcuts = @import("app/shortcuts.zig");
 const calendar_view = @import("ui/calendar_view.zig");
-const add_modal = @import("ui/modals/add_event.zig");
-const view_modal = @import("ui/modals/view_events.zig");
-const goto_modal = @import("ui/modals/go_to_date.zig");
+const modal_registry = @import("ui/modal_registry.zig");
 const platform = @import("platform/macos_window.zig");
 
 var state: app_state.State = .{};
@@ -27,10 +29,7 @@ export fn frame() void {
 
     render.beginFrame(width_i, height_i);
     calendar_view.draw(&state, width, height);
-    // Draw view_modal first, then event_modal on top (for edit mode layering)
-    view_modal.draw(&state, width, height);
-    add_modal.draw(&state, width, height);
-    goto_modal.draw(&state, width, height);
+    modal_registry.drawAll(&state, width, height);
     render.endFrame();
 }
 
@@ -40,19 +39,13 @@ export fn cleanup() void {
 
 export fn event(ev: [*c]const sapp.Event) void {
     _ = render.handleEvent(ev.*);
-    // Event modal (add/edit) takes priority when open
-    if (state.event_modal_mode != .closed) {
-        add_modal.handleEvent(&state, ev.*);
+
+    // Let modal registry handle events if any modal is open
+    if (modal_registry.handleEvent(&state, ev.*)) {
         return;
     }
-    if (state.view_modal_open) {
-        view_modal.handleEvent(&state, ev.*);
-        return;
-    }
-    if (state.goto_modal_open) {
-        goto_modal.handleEvent(&state, ev.*);
-        return;
-    }
+
+    // Calendar shortcuts (only when no modal is open)
     if (ev.*.type == .KEY_DOWN) {
         shortcuts.handleKeyDown(&state, ev.*.key_code);
     }
