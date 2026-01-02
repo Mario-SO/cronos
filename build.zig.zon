@@ -1,7 +1,7 @@
 .{
-    .name = .sokolzigimguisample,
+    .name = .cronos,
     .version = "0.0.0",
-    .fingerprint = 0x60a713b269ae5b2,
+    .fingerprint = 0xb6d5396932e02ec6,
     .dependencies = .{
         .sokol = .{
             .url = "git+https://github.com/floooh/sokol-zig.git#aaf291ca2d3d1cedc05d65f5a1cacae0f53d934a",

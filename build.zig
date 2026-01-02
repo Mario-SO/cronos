@@ -10,6 +10,11 @@ pub fn build(b: *Build) !void {
 
     const opt_docking = b.option(bool, "docking", "Build with docking support") orelse false;
 
+    const mod = b.addModule("cronos", .{
+        .root_source_file = b.path("lib/root.zig"),
+        .target = target,
+    });
+
     // Get the matching Zig module name, C header search path and C library for
     // vanilla imgui vs the imgui docking branch.
     const cimgui_conf = cimgui.getConfig(opt_docking);
@@ -37,6 +42,7 @@ pub fn build(b: *Build) !void {
         .imports = &.{
             .{ .name = "sokol", .module = dep_sokol.module("sokol") },
             .{ .name = cimgui_conf.module_name, .module = dep_cimgui.module(cimgui_conf.module_name) },
+            .{ .name = "cronos", .module = mod },
         },
     });
     const mod_options = b.addOptions();
@@ -48,7 +54,7 @@ pub fn build(b: *Build) !void {
 
 fn buildNative(b: *Build, mod: *Build.Module) !void {
     const exe = b.addExecutable(.{
-        .name = "demo",
+        .name = "Cronos",
         .root_module = mod,
     });
     b.installArtifact(exe);
