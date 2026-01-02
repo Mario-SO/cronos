@@ -2,6 +2,8 @@
 
 Minimal calendar app built with Sokol + Zig.
 
+[Small preview](https://x.com/mariodev__/status/2007028805173698739?s=20)
+
 Features:
 - Month grid with today/selection highlight
 - Add events and list/delete events in modals
