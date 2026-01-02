@@ -25,7 +25,7 @@ Roadmap for v1.0:
 - [x] Edit events
 - [ ] Search through event list
 - [ ] Persistance
-- [ ] Event previews in monthly view
+- [x] Event previews in monthly view
 - [ ] Week and day views
 - [ ] Settings
 - [ ] ImGui debugging
