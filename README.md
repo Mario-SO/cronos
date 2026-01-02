@@ -20,14 +20,14 @@ Build:
 - `zig build run`
 
 Roadmap for v1.0:
-- Go to date ✅
-- Richer events (time duration, color) ✅
-- Edit events ✅
-- Search through events
-- Persistance
-- Event previews in monthly view
-- Week and day views
-- Settings
-- ImGui debugging
-- Mac App
-- Customization?
+- [x] Go to date
+- [x] Richer events (time duration, color)
+- [x] Edit events
+- [ ] Search through event list
+- [ ] Persistance
+- [ ] Event previews in monthly view
+- [ ] Week and day views
+- [ ] Settings
+- [ ] ImGui debugging
+- [ ] Mac App
+- [ ] Customization?
