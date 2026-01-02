@@ -1,15 +1,29 @@
-# sokol-zig-imgui-sample
+# Cronos
 
-[![build](https://github.com/floooh/sokol-zig-imgui-sample/actions/workflows/main.yml/badge.svg)](https://github.com/floooh/sokol-zig-imgui-sample/actions/workflows/main.yml)
+Minimal calendar app built with Sokol + Zig.
 
-Sample project for using Dear ImGui with the Sokol Zig bindings.
+Features:
+- Month grid with today/selection highlight
+- Add events and list/delete events in modals
+- Keyboard-first navigation (H/J/K/L, arrows, A/T/V)
 
-> NOTE: no longer compatible with Zig 0.13.0, please use the latest Zig nightly
+Project layout:
+- `lib/cronos/` time/date/calendar/event logic (library code)
+- `src/app/` state + commands + shortcuts
+- `src/ui/` calendar view and modals
+- `src/render/` Sokol render helpers
+- `src/platform/` macOS window tweaks
 
-On macOS, Windows and Linux just run:
+Build:
+- `zig build run`
 
-`zig build run`
-
-...or for the Dear ImGui docking branch:
-
-`zig build -Ddocking run`
+Roadmap:
+- Go to date
+- Search through events
+- Settings
+- ImGui debugging
+- Event previews
+- Edit events
+- Persistance
+- Mac App
+- Customization?
