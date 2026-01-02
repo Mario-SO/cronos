@@ -33,16 +33,37 @@ pub fn moveSelectedByDays(state: *State, delta: i32) void {
 }
 
 pub fn openAddModal(state: *State) void {
-    @memset(state.add_input[0..], 0);
-    state.add_input_len = 0;
-    state.add_ignore_next_char = true;
-    state.add_modal_open = true;
+    @memset(state.event_input[0..], 0);
+    state.event_input_len = 0;
+    state.event_ignore_next_char = true;
+    state.event_modal_mode = .add;
     state.view_modal_open = false;
+}
+
+pub fn openEditModal(state: *State) void {
+    const selected_days = cronos.calendar.daysFromCivil(state.selected.year, state.selected.month, state.selected.day);
+    const total = cronos.events.countForDay(state.events[0..state.events_count], selected_days);
+    if (total == 0) return; // No events to edit
+
+    // Find the actual event index
+    const event_idx = cronos.events.indexForDayPosition(
+        state.events[0..state.events_count],
+        selected_days,
+        state.view_selected_index,
+    ) orelse return;
+
+    // Preload the event data into the input buffer
+    const event = &state.events[event_idx];
+    state.event_input_len = cronos.events.formatEventAsInput(event, state.event_input[0..]);
+    state.event_edit_index = event_idx;
+    state.event_ignore_next_char = true;
+    state.event_modal_mode = .edit;
+    // Keep view_modal_open = true so we return to it on escape
 }
 
 pub fn openViewModal(state: *State) void {
     state.view_modal_open = true;
-    state.add_modal_open = false;
+    state.event_modal_mode = .closed;
     state.view_selected_index = 0;
 }
 
@@ -53,18 +74,49 @@ pub fn goToToday(state: *State) void {
 }
 
 pub fn addEventFromInput(state: *State) bool {
-    const input = std.mem.sliceTo(state.add_input[0..], 0);
+    const input = std.mem.sliceTo(state.event_input[0..], 0);
     if (input.len == 0) return false;
     if (state.events_count >= state.events.len) return false;
+
+    // Parse the input to extract title, time, and color
+    const parsed = cronos.input_parser.parse(input);
+    if (parsed.title.len == 0) return false;
 
     const date_days = cronos.calendar.daysFromCivil(state.selected.year, state.selected.month, state.selected.day);
     var ev = &state.events[state.events_count];
     ev.date_days = date_days;
+    ev.start_minutes = parsed.start_minutes;
+    ev.end_minutes = parsed.end_minutes;
+    ev.color = parsed.color;
+
     const max_len = ev.title.len - 1;
-    const copy_len = @min(max_len, input.len);
-    std.mem.copyForwards(u8, ev.title[0..copy_len], input[0..copy_len]);
-    ev.title[copy_len] = 0;
+    const copy_len = @min(max_len, parsed.title.len);
+    @memset(ev.title[0..], 0);
+    std.mem.copyForwards(u8, ev.title[0..copy_len], parsed.title[0..copy_len]);
     state.events_count += 1;
+    return true;
+}
+
+pub fn saveEditedEvent(state: *State) bool {
+    const input = std.mem.sliceTo(state.event_input[0..], 0);
+    if (input.len == 0) return false;
+    if (state.event_edit_index >= state.events_count) return false;
+
+    // Parse the input to extract title, time, and color
+    const parsed = cronos.input_parser.parse(input);
+    if (parsed.title.len == 0) return false;
+
+    // Update the existing event in-place
+    var ev = &state.events[state.event_edit_index];
+    // Keep the same date_days (editing doesn't change the date)
+    ev.start_minutes = parsed.start_minutes;
+    ev.end_minutes = parsed.end_minutes;
+    ev.color = parsed.color;
+
+    const max_len = ev.title.len - 1;
+    const copy_len = @min(max_len, parsed.title.len);
+    @memset(ev.title[0..], 0);
+    std.mem.copyForwards(u8, ev.title[0..copy_len], parsed.title[0..copy_len]);
     return true;
 }
 
@@ -78,7 +130,7 @@ pub fn openGotoModal(state: *State) void {
     state.goto_focus = 0;
     state.goto_ignore_next_char = true;
     state.goto_modal_open = true;
-    state.add_modal_open = false;
+    state.event_modal_mode = .closed;
     state.view_modal_open = false;
 }
 

@@ -21,7 +21,7 @@ pub fn weekdayOfFirst(year: i32, month: u8) u8 {
 
 pub fn dayOfWeek(year: i32, month: u8, day: u8) u8 {
     const days = daysFromCivil(year, month, day);
-    const shifted = days + 4;
+    const shifted = days + 3; // +3 makes Monday = 0
     const mod = @mod(shifted, 7);
     return @intCast(mod);
 }

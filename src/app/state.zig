@@ -1,18 +1,29 @@
 const cronos = @import("lib/cronos");
 
+pub const EventModalMode = enum {
+    closed,
+    add,
+    edit,
+};
+
 pub const State = struct {
     current_year: i32 = 1970,
     current_month: u8 = 1,
     selected: cronos.Date = .{ .year = 1970, .month = 1, .day = 1 },
     today: cronos.Date = .{ .year = 1970, .month = 1, .day = 1 },
-    add_modal_open: bool = false,
-    add_input: [128:0]u8 = [_:0]u8{0} ** 128,
-    add_input_len: usize = 0,
-    add_ignore_next_char: bool = false,
+    // Event modal (add/edit)
+    event_modal_mode: EventModalMode = .closed,
+    event_input: [128:0]u8 = [_:0]u8{0} ** 128,
+    event_input_len: usize = 0,
+    event_ignore_next_char: bool = false,
+    event_edit_index: usize = 0, // index in events array when editing
+    // View events modal
     view_modal_open: bool = false,
     view_selected_index: usize = 0,
+    // Events storage
     events: [128]cronos.Event = undefined,
     events_count: usize = 0,
+    // Go to date modal
     goto_modal_open: bool = false,
     goto_focus: u8 = 0, // 0=day, 1=month, 2=year
     goto_day_input: [4:0]u8 = [_:0]u8{0} ** 4,

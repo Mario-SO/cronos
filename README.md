@@ -19,13 +19,15 @@ Project layout:
 Build:
 - `zig build run`
 
-Roadmap:
-- Go to date
+Roadmap for v1.0:
+- Go to date ✅
+- Richer events (time duration, color) ✅
+- Edit events ✅
 - Search through events
+- Persistance
+- Event previews in monthly view
+- Week and day views
 - Settings
 - ImGui debugging
-- Event previews
-- Edit events
-- Persistance
 - Mac App
 - Customization?

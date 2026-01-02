@@ -3,7 +3,8 @@ const sgl = sokol.gl;
 const sdtx = sokol.debugtext;
 const cronos = @import("lib/cronos");
 const render = @import("../render/sokol_context.zig");
-const State = @import("../app/state.zig").State;
+const state_mod = @import("../app/state.zig");
+const State = state_mod.State;
 
 pub fn draw(state: *const State, width: f32, height: f32) void {
     const month_names = [_][]const u8{
@@ -21,13 +22,13 @@ pub fn draw(state: *const State, width: f32, height: f32) void {
         "December",
     };
     const weekday_names = [_][]const u8{
-        "Sun",
         "Mon",
         "Tue",
         "Wed",
         "Thu",
         "Fri",
         "Sat",
+        "Sun",
     };
 
     const margin: f32 = 32.0;
@@ -103,7 +104,8 @@ pub fn draw(state: *const State, width: f32, height: f32) void {
     }
     sgl.end();
 
-    if (!(state.add_modal_open or state.view_modal_open or state.goto_modal_open)) {
+    const any_modal_open = state.event_modal_mode != .closed or state.view_modal_open or state.goto_modal_open;
+    if (!any_modal_open) {
         sdtx.canvas(width, height);
         sdtx.origin(0.0, 0.0);
         sdtx.font(0);

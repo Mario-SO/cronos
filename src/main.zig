@@ -27,8 +27,9 @@ export fn frame() void {
 
     render.beginFrame(width_i, height_i);
     calendar_view.draw(&state, width, height);
-    add_modal.draw(&state, width, height);
+    // Draw view_modal first, then event_modal on top (for edit mode layering)
     view_modal.draw(&state, width, height);
+    add_modal.draw(&state, width, height);
     goto_modal.draw(&state, width, height);
     render.endFrame();
 }
@@ -39,7 +40,8 @@ export fn cleanup() void {
 
 export fn event(ev: [*c]const sapp.Event) void {
     _ = render.handleEvent(ev.*);
-    if (state.add_modal_open) {
+    // Event modal (add/edit) takes priority when open
+    if (state.event_modal_mode != .closed) {
         add_modal.handleEvent(&state, ev.*);
         return;
     }
