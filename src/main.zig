@@ -11,14 +11,21 @@ const app_state = @import("app/state.zig");
 const shortcuts = @import("app/shortcuts.zig");
 const calendar_view = @import("ui/calendar_view.zig");
 const modal_registry = @import("ui/modal_registry.zig");
+const profiler = @import("app/profiler.zig");
+const profiler_window = @import("ui/profiler_window.zig");
 const platform = @import("platform/macos_window.zig");
+const build_options = @import("build_options");
 
 var state: app_state.State = .{};
+var profiler_state: profiler.Profiler = .{};
 
 export fn init() void {
     render.setup();
     app_state.init(&state);
     platform.configureMacWindow();
+    if (build_options.dev) {
+        profiler_state.reset();
+    }
 }
 
 export fn frame() void {
@@ -30,6 +37,10 @@ export fn frame() void {
     render.beginFrame(width_i, height_i);
     calendar_view.draw(&state, width, height);
     modal_registry.drawAll(&state, width, height);
+    if (build_options.dev) {
+        profiler_state.update(sapp.frameDuration());
+        profiler_window.draw(&profiler_state);
+    }
     render.endFrame();
 }
 
