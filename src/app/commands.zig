@@ -159,7 +159,10 @@ pub fn goToDateFromInput(state: *State) bool {
     const year_str = std.mem.sliceTo(state.goto_modal.year_input[0..], 0);
 
     const day = std.fmt.parseInt(u8, day_str, 10) catch return false;
-    const month = cronos.calendar.parseMonthAbbrev(month_str) orelse return false;
+    const month = if (month_str.len == 0)
+        state.calendar.current_month
+    else
+        cronos.calendar.parseMonthAbbrev(month_str) orelse return false;
 
     const year = if (year_str.len == 0)
         state.calendar.today.year
