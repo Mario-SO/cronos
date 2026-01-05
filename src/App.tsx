@@ -1,6 +1,7 @@
 import { AddEventModal } from "@components/AddEventModal";
 import { CalendarView } from "@components/CalendarView";
 import { GoToDateModal } from "@components/GoToDateModal";
+import { SearchEventsModal } from "@components/SearchEventsModal";
 import { ViewEventsModal } from "@components/ViewEventsModal";
 import { useShortcutHandler } from "@core/keyboard";
 import type { CalendarEvent, Scope } from "@core/types";
@@ -98,6 +99,14 @@ export function App() {
 					currentDate={calendarState.selectedDate}
 					onClose={handleCloseModal}
 					onGo={handleGoToDate}
+				/>
+			)}
+
+			{modalState.type === "search" && (
+				<SearchEventsModal
+					onClose={handleCloseModal}
+					onGoToDate={handleGoToDate}
+					onEdit={handleEditEvent}
 				/>
 			)}
 

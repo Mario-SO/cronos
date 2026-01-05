@@ -21,7 +21,7 @@ export interface CalendarState {
 	selectedDate: Date; // Currently selected date
 }
 
-export type ModalType = "none" | "add" | "view" | "goto";
+export type ModalType = "none" | "add" | "view" | "goto" | "search";
 
 export interface ModalState {
 	type: ModalType;
@@ -38,7 +38,7 @@ export interface ParsedEventInput {
 // Keyboard shortcut system types
 
 /** Scope defines when a shortcut is active */
-export type Scope = "root" | "add" | "view" | "goto";
+export type Scope = "root" | "add" | "view" | "goto" | "search";
 
 /** All available command identifiers */
 export type Command =
@@ -54,6 +54,7 @@ export type Command =
 	| "modal.openAdd"
 	| "modal.openView"
 	| "modal.openGoto"
+	| "modal.openSearch"
 	| "modal.close"
 	// App
 	| "app.quit";

@@ -120,7 +120,8 @@ export function CalendarView({ state }: CalendarViewProps) {
 			{/* Help text */}
 			<box style={{ marginTop: 1 }}>
 				<text fg={THEME.foregroundDim}>
-					[/] Month | H/J/K/L Navigate | T Today | A Add | V View | G Goto
+					[/] Month | H/J/K/L Navigate | T Today | A Add | V View | S Search | G
+					Go to date
 				</text>
 			</box>
 		</box>

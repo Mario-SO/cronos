@@ -55,7 +55,7 @@ case "calendar.nextYear":
 - [ ] Google Calendar sync
 - [ ] iCal export/import
 - [x] persistent storage
-- [ ] search through event list
+- [x] search through event list
 - [ ] settings
 - [ ] recurring events
 - [ ] cli support

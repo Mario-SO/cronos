@@ -22,6 +22,7 @@ export const shortcuts: Shortcut[] = [
 	{ key: "a", command: "modal.openAdd", description: "Add event" },
 	{ key: "v", command: "modal.openView", description: "View events" },
 	{ key: "g", command: "modal.openGoto", description: "Go to date" },
+	{ key: "s", command: "modal.openSearch", description: "Search events" },
 
 	// App commands (root scope)
 	{ key: "q", command: "app.quit", description: "Quit" },

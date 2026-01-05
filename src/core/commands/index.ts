@@ -41,6 +41,9 @@ export function execute(command: Command): void {
 		case "modal.openGoto":
 			modal.openGoto();
 			break;
+		case "modal.openSearch":
+			modal.openSearch();
+			break;
 		case "modal.close":
 			modal.close();
 			break;
