@@ -8,6 +8,8 @@ interface DayCellProps {
 	isSelected: boolean;
 	isCurrentMonth: boolean;
 	events: CalendarEvent[];
+	width?: number;
+	height?: number;
 }
 
 export function DayCell({
@@ -16,13 +18,22 @@ export function DayCell({
 	isSelected,
 	isCurrentMonth,
 	events,
+	width = 12,
+	height = 5,
 }: DayCellProps) {
 	const maxEventPreviews = DAY_CELL_EVENT_PREVIEWS;
-	// If we have more events than maxEventPreviews, we need space for "+x more"
-	// Box has height 5, borders take 2, leaving 3 content lines: day + 1 event + "+x more"
-	// So when showing "+x more", only display 1 event to fit in 3 lines
-	const hasMore = events.length > maxEventPreviews;
-	const effectiveMax = hasMore ? 1 : maxEventPreviews;
+	// Calculate how many events we can display based on available height
+	// Reserve 1 line for day number, 1 line for "+x more" if needed
+	const availableLines = Math.max(1, height - 2); // -2 for borders
+	const maxDisplayable = Math.min(
+		maxEventPreviews,
+		Math.max(1, availableLines - 1),
+	);
+
+	const hasMore = events.length > maxDisplayable;
+	const effectiveMax = hasMore
+		? Math.max(1, maxDisplayable - 1)
+		: maxDisplayable;
 	const displayEvents = events.slice(0, effectiveMax);
 	const moreCount = events.length - effectiveMax;
 
@@ -46,8 +57,8 @@ export function DayCell({
 	return (
 		<box
 			style={{
-				width: 12,
-				height: 5,
+				width,
+				height,
 				border: true,
 				borderStyle: "single",
 				borderColor,

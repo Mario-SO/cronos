@@ -1,3 +1,4 @@
+import { useModalDimensions } from "@hooks/useModalDimensions";
 import { THEME } from "@lib/colors";
 import {
 	getShortMonthName,
@@ -6,6 +7,7 @@ import {
 } from "@lib/dateUtils";
 import { useKeyboard } from "@opentui/react";
 import { useState } from "react";
+import { ModalFrame } from "./ModalFrame";
 
 interface GoToDateModalProps {
 	currentDate: Date;
@@ -20,6 +22,14 @@ export function GoToDateModal({
 	onClose,
 	onGo,
 }: GoToDateModalProps) {
+	const { width: modalWidth, height: modalHeight } = useModalDimensions({
+		minWidth: 30,
+		widthPercent: 0.5,
+		maxWidthPercent: 0.7,
+		minHeight: 10,
+		heightPercent: 0.4,
+		maxHeightPercent: 0.6,
+	});
 	const [dayValue, setDayValue] = useState(String(currentDate.getDate()));
 	const [monthValue, setMonthValue] = useState(
 		getShortMonthName(currentDate.getMonth()),
@@ -91,23 +101,7 @@ export function GoToDateModal({
 	};
 
 	return (
-		<box
-			style={{
-				position: "absolute",
-				top: "50%",
-				left: "50%",
-				width: 40,
-				height: 12,
-				marginTop: -6,
-				marginLeft: -20,
-				backgroundColor: THEME.background,
-				border: true,
-				borderStyle: "double",
-				borderColor: THEME.borderHighlight,
-				flexDirection: "column",
-				padding: 1,
-			}}
-		>
+		<ModalFrame width={modalWidth} height={modalHeight}>
 			{/* Title */}
 			<text fg={THEME.selected} style={{ marginBottom: 1 }}>
 				Go To Date
@@ -190,6 +184,6 @@ export function GoToDateModal({
 			<text fg={THEME.foregroundDim}>
 				Tab to switch fields | Enter to go | Esc to cancel
 			</text>
-		</box>
+		</ModalFrame>
 	);
 }

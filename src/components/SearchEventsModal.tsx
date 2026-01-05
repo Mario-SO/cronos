@@ -1,14 +1,14 @@
 import type { CalendarEvent } from "@core/types";
+import { useModalDimensions } from "@hooks/useModalDimensions";
 import { getColorHex, THEME } from "@lib/colors";
+import { SEARCH_MODAL_TITLE_LENGTH } from "@lib/constants";
 import { formatTimeRange, parseDateKey } from "@lib/dateUtils";
 import type { ScrollBoxRenderable } from "@opentui/core";
 import { useKeyboard } from "@opentui/react";
 import { getAllEvents } from "@state/events";
 import { Effect } from "effect";
 import { useEffect, useMemo, useRef, useState } from "react";
-
-const SEARCH_MODAL_VISIBLE_EVENTS = 8;
-const SEARCH_MODAL_TITLE_LENGTH = 24;
+import { ModalFrame } from "./ModalFrame";
 
 interface SearchEventsModalProps {
 	onClose: () => void;
@@ -67,9 +67,27 @@ export function SearchEventsModal({
 	onGoToDate,
 	onEdit,
 }: SearchEventsModalProps) {
+	const { width: modalWidth, height: modalHeight } = useModalDimensions({
+		minWidth: 50,
+		widthPercent: 0.8,
+		maxWidthPercent: 0.9,
+		minHeight: 14,
+		heightPercent: 0.75,
+		maxHeightPercent: 0.85,
+	});
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);
-	const prevQueryRef = useRef(searchQuery);
+	// Calculate visible events: modalHeight - fixed elements - container borders
+	// Fixed elements: title(1+margin=2) + input(3+margin=4) + help(1+margin=2) + padding(2) = 10
+	// Container needs: visibleEvents + 2 (borders)
+	// So: visibleEvents = modalHeight - 10 - 2 = modalHeight - 12
+	const visibleEvents = Math.max(
+		4,
+		modalHeight - 12, // Reserve space: title(2) + input(4) + help(2) + padding(2) + borders(2) = 12
+	);
+	// Calculate responsive widths for date and time columns
+	const dateWidth = Math.max(12, Math.floor(modalWidth * 0.12)); // Date format: "Apr 28, 2031" ~12 chars
+	const timeWidth = Math.max(13, Math.floor(modalWidth * 0.12)); // Time format: "2:47pm-4:28pm" ~13 chars
 
 	// Get all events
 	const allEvents = useMemo(() => Effect.runSync(getAllEvents), []);
@@ -99,12 +117,9 @@ export function SearchEventsModal({
 	}, [allEvents, searchQuery]);
 
 	// Reset selection when query changes
-	if (prevQueryRef.current !== searchQuery) {
-		prevQueryRef.current = searchQuery;
-		if (selectedIndex !== 0) {
-			setSelectedIndex(0);
-		}
-	}
+	useEffect(() => {
+		setSelectedIndex(0);
+	}, []);
 
 	// Clamp selected index if list shrunk
 	const clampedIndex = Math.min(
@@ -117,16 +132,14 @@ export function SearchEventsModal({
 	// Scroll to keep selected item visible
 	useEffect(() => {
 		if (scrollboxRef.current && filteredEvents.length > 0) {
-			const targetScrollTop = Math.max(
-				0,
-				clampedIndex - SEARCH_MODAL_VISIBLE_EVENTS + 1,
-			);
+			const targetScrollTop = Math.max(0, clampedIndex - visibleEvents + 1);
 			scrollboxRef.current.scrollTop = targetScrollTop;
 		}
-	}, [clampedIndex, filteredEvents.length]);
+	}, [clampedIndex, filteredEvents.length, visibleEvents]);
 
 	useKeyboard((key) => {
-		if (key.name === "escape" || key.name === "s") {
+		// Don't allow 's' key to close the modal
+		if (key.name === "escape") {
 			onClose();
 			return;
 		}
@@ -154,23 +167,7 @@ export function SearchEventsModal({
 	});
 
 	return (
-		<box
-			style={{
-				position: "absolute",
-				top: "50%",
-				left: "50%",
-				width: 56,
-				height: 18,
-				marginTop: -9,
-				marginLeft: -28,
-				backgroundColor: THEME.background,
-				border: true,
-				borderStyle: "double",
-				borderColor: THEME.borderHighlight,
-				flexDirection: "column",
-				padding: 1,
-			}}
-		>
+		<ModalFrame width={modalWidth} height={modalHeight}>
 			{/* Title */}
 			<text fg={THEME.selected} style={{ marginBottom: 1 }}>
 				Search Events
@@ -197,7 +194,7 @@ export function SearchEventsModal({
 			<box
 				style={{
 					flexDirection: "column",
-					height: SEARCH_MODAL_VISIBLE_EVENTS + 2,
+					height: visibleEvents + 2,
 					border: true,
 					borderColor: THEME.border,
 					overflow: "hidden",
@@ -211,7 +208,7 @@ export function SearchEventsModal({
 					<scrollbox
 						ref={scrollboxRef}
 						focused={false}
-						style={{ height: SEARCH_MODAL_VISIBLE_EVENTS }}
+						style={{ height: visibleEvents }}
 					>
 						{filteredEvents.map((event, index) => {
 							const isSelected = index === clampedIndex;
@@ -230,11 +227,14 @@ export function SearchEventsModal({
 									<text fg={getColorHex(event.color)}>●</text>
 									<text
 										fg={THEME.foregroundDim}
-										style={{ marginLeft: 1, width: 12 }}
+										style={{ marginLeft: 1, width: dateWidth }}
 									>
 										{formatEventDate(event.date)}
 									</text>
-									<text fg={THEME.foregroundDim} style={{ width: 10 }}>
+									<text
+										fg={THEME.foregroundDim}
+										style={{ marginLeft: 1, width: timeWidth }}
+									>
 										{formatTimeRange(event.startTime, event.endTime)}
 									</text>
 									<text
@@ -261,6 +261,6 @@ export function SearchEventsModal({
 					↑/↓ Navigate | Enter Go to date | E Edit | Esc/S Close
 				</text>
 			</box>
-		</box>
+		</ModalFrame>
 	);
 }

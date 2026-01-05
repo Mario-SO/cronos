@@ -1,4 +1,5 @@
 import type { CalendarEvent } from "@core/types";
+import { useModalDimensions } from "@hooks/useModalDimensions";
 import { getColorHex, THEME } from "@lib/colors";
 import { formatDateKey, formatTimeRange } from "@lib/dateUtils";
 import { parseEventInput, reconstructEventInput } from "@lib/eventParser";
@@ -6,6 +7,7 @@ import { useKeyboard } from "@opentui/react";
 import { addEvent, updateEvent } from "@state/events";
 import { Effect } from "effect";
 import { useState } from "react";
+import { ModalFrame } from "./ModalFrame";
 
 interface AddEventModalProps {
 	selectedDate: Date;
@@ -20,6 +22,14 @@ export function AddEventModal({
 	onClose,
 	onSave,
 }: AddEventModalProps) {
+	const { width: modalWidth, height: modalHeight } = useModalDimensions({
+		minWidth: 45,
+		widthPercent: 0.7,
+		maxWidthPercent: 0.85,
+		minHeight: 12,
+		heightPercent: 0.6,
+		maxHeightPercent: 0.8,
+	});
 	const initialValue = editingEvent ? reconstructEventInput(editingEvent) : "";
 	const [inputValue, setInputValue] = useState(initialValue);
 
@@ -72,23 +82,7 @@ export function AddEventModal({
 	});
 
 	return (
-		<box
-			style={{
-				position: "absolute",
-				top: "50%",
-				left: "50%",
-				width: 50,
-				height: 16,
-				marginTop: -8,
-				marginLeft: -25,
-				backgroundColor: THEME.background,
-				border: true,
-				borderStyle: "double",
-				borderColor: THEME.borderHighlight,
-				flexDirection: "column",
-				padding: 1,
-			}}
-		>
+		<ModalFrame width={modalWidth} height={modalHeight}>
 			{/* Title */}
 			<text fg={THEME.selected} style={{ marginBottom: 1 }}>
 				{editingEvent ? "Edit Event" : "Add Event"} - {formattedDate}
@@ -136,6 +130,6 @@ export function AddEventModal({
 			<box style={{ marginTop: 1 }}>
 				<text fg={THEME.foregroundDim}>Enter to save | Esc to cancel</text>
 			</box>
-		</box>
+		</ModalFrame>
 	);
 }

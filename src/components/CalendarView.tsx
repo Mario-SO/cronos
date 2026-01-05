@@ -1,4 +1,5 @@
 import type { CalendarState } from "@core/types";
+import { useTerminalSize } from "@hooks/useTerminalSize";
 import { THEME } from "@lib/colors";
 import {
 	formatDateKey,
@@ -16,10 +17,17 @@ interface CalendarViewProps {
 }
 
 export function CalendarView({ state }: CalendarViewProps) {
+	const terminalSize = useTerminalSize();
 	const { displayedMonth, selectedDate } = state;
 	const year = displayedMonth.getFullYear();
 	const month = displayedMonth.getMonth();
 	const today = new Date();
+
+	// Calculate responsive cell dimensions
+	// Reserve space: 1 line for header, 1 line for weekday headers, 1 line for help text
+	const availableHeight = terminalSize.height - 3;
+	const cellHeight = Math.max(3, Math.floor(availableHeight / 6));
+	const cellWidth = Math.max(8, Math.floor((terminalSize.width - 2) / 7)); // -2 for padding
 
 	const daysInMonth = getDaysInMonth(year, month);
 	const firstWeekday = getWeekdayOfFirst(year, month);
@@ -76,7 +84,7 @@ export function CalendarView({ state }: CalendarViewProps) {
 					<box
 						key={header}
 						style={{
-							width: 12,
+							width: cellWidth,
 							alignItems: "center",
 							justifyContent: "center",
 						}}
@@ -110,6 +118,8 @@ export function CalendarView({ state }: CalendarViewProps) {
 									isSelected={isSelected}
 									isCurrentMonth={isCurrentMonth}
 									events={events}
+									width={cellWidth}
+									height={cellHeight}
 								/>
 							);
 						})}

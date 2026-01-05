@@ -5,52 +5,23 @@ import * as modal from "./modal";
 
 export { app, calendar, modal };
 
+const commandHandlers: Record<Command, () => void> = {
+	"calendar.prevMonth": calendar.prevMonth,
+	"calendar.nextMonth": calendar.nextMonth,
+	"calendar.prevDay": calendar.prevDay,
+	"calendar.nextDay": calendar.nextDay,
+	"calendar.prevWeek": calendar.prevWeek,
+	"calendar.nextWeek": calendar.nextWeek,
+	"calendar.today": calendar.today,
+	"modal.openAdd": modal.openAdd,
+	"modal.openView": modal.openView,
+	"modal.openGoto": modal.openGoto,
+	"modal.openSearch": modal.openSearch,
+	"modal.close": modal.close,
+	"app.quit": app.quit,
+};
+
 /** Execute a command by its identifier */
 export function execute(command: Command): void {
-	switch (command) {
-		// Calendar
-		case "calendar.prevMonth":
-			calendar.prevMonth();
-			break;
-		case "calendar.nextMonth":
-			calendar.nextMonth();
-			break;
-		case "calendar.prevDay":
-			calendar.prevDay();
-			break;
-		case "calendar.nextDay":
-			calendar.nextDay();
-			break;
-		case "calendar.prevWeek":
-			calendar.prevWeek();
-			break;
-		case "calendar.nextWeek":
-			calendar.nextWeek();
-			break;
-		case "calendar.today":
-			calendar.today();
-			break;
-
-		// Modal
-		case "modal.openAdd":
-			modal.openAdd();
-			break;
-		case "modal.openView":
-			modal.openView();
-			break;
-		case "modal.openGoto":
-			modal.openGoto();
-			break;
-		case "modal.openSearch":
-			modal.openSearch();
-			break;
-		case "modal.close":
-			modal.close();
-			break;
-
-		// App
-		case "app.quit":
-			app.quit();
-			break;
-	}
+	commandHandlers[command]();
 }

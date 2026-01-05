@@ -20,11 +20,6 @@ export function App() {
 	const calendarState = Effect.runSync(Ref.get(calendarStateRef));
 	const modalState = useModalState();
 
-	// Local state for editing event (UI-specific, not part of global modal state)
-	const [editingEvent, setEditingEvent] = useState<CalendarEvent | undefined>(
-		undefined,
-	);
-
 	// Determine current scope for shortcut handling
 	const scope: Scope = modalState.type === "none" ? "root" : modalState.type;
 
@@ -36,19 +31,16 @@ export function App() {
 
 	const handleCloseModal = useCallback(() => {
 		Effect.runSync(closeModal);
-		setEditingEvent(undefined);
 		triggerUpdate();
 	}, [triggerUpdate]);
 
 	const handleSaveEvent = useCallback(() => {
 		Effect.runSync(closeModal);
-		setEditingEvent(undefined);
 		triggerUpdate();
 	}, [triggerUpdate]);
 
 	const handleEditEvent = useCallback(
 		(event: CalendarEvent) => {
-			setEditingEvent(event);
 			Effect.runSync(openEditModal(event));
 			triggerUpdate();
 		},
@@ -80,7 +72,7 @@ export function App() {
 			{modalState.type === "add" && (
 				<AddEventModal
 					selectedDate={calendarState.selectedDate}
-					editingEvent={editingEvent ?? modalState.editingEvent}
+					editingEvent={modalState.editingEvent}
 					onClose={handleCloseModal}
 					onSave={handleSaveEvent}
 				/>

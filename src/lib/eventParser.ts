@@ -1,5 +1,6 @@
 import type { ColorName, ParsedEventInput } from "@core/types";
 import { COLOR_NAMES, getColorByIndex } from "./colors";
+import { formatTime } from "./dateUtils";
 
 // Parse time like "2pm", "2:30pm", "14:00", "14"
 function parseTimeString(str: string): number | null {
@@ -173,17 +174,6 @@ export function reconstructEventInput(event: {
 	const parts: string[] = [event.title];
 
 	if (event.startTime !== undefined) {
-		const formatTime = (minutes: number): string => {
-			const hours = Math.floor(minutes / 60);
-			const mins = minutes % 60;
-			const period = hours >= 12 ? "pm" : "am";
-			const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-			if (mins === 0) {
-				return `${displayHours}${period}`;
-			}
-			return `${displayHours}:${String(mins).padStart(2, "0")}${period}`;
-		};
-
 		if (event.endTime !== undefined) {
 			parts.push(`${formatTime(event.startTime)}-${formatTime(event.endTime)}`);
 		} else {

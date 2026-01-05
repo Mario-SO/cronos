@@ -18,95 +18,48 @@ const initialCalendarState: CalendarState = {
 export const calendarStateRef = Effect.runSync(Ref.make(initialCalendarState));
 
 // Calendar navigation effects
-export const goToPreviousMonth = Effect.gen(function* () {
-	const state = yield* Ref.get(calendarStateRef);
-	const newMonth = addMonths(state.displayedMonth, -1);
-	const newSelected = isSameMonth(state.selectedDate, state.displayedMonth)
-		? new Date(
-				newMonth.getFullYear(),
-				newMonth.getMonth(),
-				Math.min(
-					state.selectedDate.getDate(),
-					new Date(
-						newMonth.getFullYear(),
-						newMonth.getMonth() + 1,
-						0,
-					).getDate(),
-				),
-			)
-		: state.selectedDate;
-	yield* Ref.set(calendarStateRef, {
-		displayedMonth: newMonth,
-		selectedDate: newSelected,
+export const shiftDisplayedMonth = (months: number) =>
+	Effect.gen(function* () {
+		const state = yield* Ref.get(calendarStateRef);
+		const newMonth = addMonths(state.displayedMonth, months);
+		const newSelected = isSameMonth(state.selectedDate, state.displayedMonth)
+			? new Date(
+					newMonth.getFullYear(),
+					newMonth.getMonth(),
+					Math.min(
+						state.selectedDate.getDate(),
+						new Date(
+							newMonth.getFullYear(),
+							newMonth.getMonth() + 1,
+							0,
+						).getDate(),
+					),
+				)
+			: state.selectedDate;
+		yield* Ref.set(calendarStateRef, {
+			displayedMonth: newMonth,
+			selectedDate: newSelected,
+		});
 	});
-});
 
-export const goToNextMonth = Effect.gen(function* () {
-	const state = yield* Ref.get(calendarStateRef);
-	const newMonth = addMonths(state.displayedMonth, 1);
-	const newSelected = isSameMonth(state.selectedDate, state.displayedMonth)
-		? new Date(
-				newMonth.getFullYear(),
-				newMonth.getMonth(),
-				Math.min(
-					state.selectedDate.getDate(),
-					new Date(
-						newMonth.getFullYear(),
-						newMonth.getMonth() + 1,
-						0,
-					).getDate(),
-				),
-			)
-		: state.selectedDate;
-	yield* Ref.set(calendarStateRef, {
-		displayedMonth: newMonth,
-		selectedDate: newSelected,
+export const shiftSelectedDate = (days: number) =>
+	Effect.gen(function* () {
+		const state = yield* Ref.get(calendarStateRef);
+		const newDate = addDays(state.selectedDate, days);
+		yield* Ref.set(calendarStateRef, {
+			displayedMonth: isSameMonth(newDate, state.displayedMonth)
+				? state.displayedMonth
+				: getFirstDayOfMonth(newDate),
+			selectedDate: newDate,
+		});
 	});
-});
 
-export const selectPreviousDay = Effect.gen(function* () {
-	const state = yield* Ref.get(calendarStateRef);
-	const newDate = addDays(state.selectedDate, -1);
-	yield* Ref.set(calendarStateRef, {
-		displayedMonth: isSameMonth(newDate, state.displayedMonth)
-			? state.displayedMonth
-			: getFirstDayOfMonth(newDate),
-		selectedDate: newDate,
-	});
-});
-
-export const selectNextDay = Effect.gen(function* () {
-	const state = yield* Ref.get(calendarStateRef);
-	const newDate = addDays(state.selectedDate, 1);
-	yield* Ref.set(calendarStateRef, {
-		displayedMonth: isSameMonth(newDate, state.displayedMonth)
-			? state.displayedMonth
-			: getFirstDayOfMonth(newDate),
-		selectedDate: newDate,
-	});
-});
-
-export const selectPreviousWeek = Effect.gen(function* () {
-	const state = yield* Ref.get(calendarStateRef);
-	const newDate = addDays(state.selectedDate, -7);
-	yield* Ref.set(calendarStateRef, {
-		displayedMonth: isSameMonth(newDate, state.displayedMonth)
-			? state.displayedMonth
-			: getFirstDayOfMonth(newDate),
-		selectedDate: newDate,
-	});
-});
-
-export const selectNextWeek = Effect.gen(function* () {
-	const state = yield* Ref.get(calendarStateRef);
-	const newDate = addDays(state.selectedDate, 7);
-	yield* Ref.set(calendarStateRef, {
-		displayedMonth: isSameMonth(newDate, state.displayedMonth)
-			? state.displayedMonth
-			: getFirstDayOfMonth(newDate),
-		selectedDate: newDate,
-	});
-});
+export const goToPreviousMonth = shiftDisplayedMonth(-1);
+export const goToNextMonth = shiftDisplayedMonth(1);
+export const selectPreviousDay = shiftSelectedDate(-1);
+export const selectNextDay = shiftSelectedDate(1);
+export const selectPreviousWeek = shiftSelectedDate(-7);
+export const selectNextWeek = shiftSelectedDate(7);
 
 export const jumpToToday = Effect.gen(function* () {
 	const now = new Date();

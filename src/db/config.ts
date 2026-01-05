@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 
 /**
  * Get the platform-specific data directory for storing application data.
- * - macOS: ~/Library/Application Support/cronos
+ * - macOS: ~/.config/cronos
  * - Linux: ~/.local/share/cronos
  * - Windows: %APPDATA%/cronos (fallback)
  */

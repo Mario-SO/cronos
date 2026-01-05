@@ -21,6 +21,7 @@
 			"@core/*": ["src/core/*"],
 			"@components/*": ["src/components/*"],
 			"@db/*": ["src/db/*"],
+			"@hooks/*": ["src/hooks/*"],
 			"@lib/*": ["src/lib/*"],
 			"@state/*": ["src/state/*"]
 		},
