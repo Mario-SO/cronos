@@ -5,9 +5,9 @@ import { SEARCH_MODAL_TITLE_LENGTH } from "@lib/constants";
 import { formatTimeRange, parseDateKey } from "@lib/dateUtils";
 import type { ScrollBoxRenderable } from "@opentui/core";
 import { useKeyboard } from "@opentui/react";
-import { getAllEvents } from "@state/events";
+import { deleteEvent, getAllEvents } from "@state/events";
 import { Effect } from "effect";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { ModalFrame } from "./ModalFrame";
 
 interface SearchEventsModalProps {
@@ -77,6 +77,8 @@ export function SearchEventsModal({
 	});
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);
+	// Force re-render after delete since events come from external store
+	const [eventsVersion, forceUpdate] = useReducer((x) => x + 1, 0);
 	// Calculate visible events: modalHeight - fixed elements - container borders
 	// Fixed elements: title(1+margin=2) + input(3+margin=4) + help(1+margin=2) + padding(2) = 10
 	// Container needs: visibleEvents + 2 (borders)
@@ -90,7 +92,10 @@ export function SearchEventsModal({
 	const timeWidth = Math.max(13, Math.floor(modalWidth * 0.12)); // Time format: "2:47pm-4:28pm" ~13 chars
 
 	// Get all events
-	const allEvents = useMemo(() => Effect.runSync(getAllEvents), []);
+	const allEvents = useMemo(
+		() => Effect.runSync(getAllEvents),
+		[eventsVersion],
+	);
 
 	// Filter and sort events based on search query
 	const filteredEvents = useMemo(() => {
@@ -119,7 +124,7 @@ export function SearchEventsModal({
 	// Reset selection when query changes
 	useEffect(() => {
 		setSelectedIndex(0);
-	}, []);
+	}, [searchQuery]);
 
 	// Clamp selected index if list shrunk
 	const clampedIndex = Math.min(
@@ -158,10 +163,21 @@ export function SearchEventsModal({
 				const date = parseDateKey(event.date);
 				onGoToDate(date);
 			}
-		} else if (key.name === "e") {
+		} else if (key.ctrl && key.name === "e") {
 			const event = filteredEvents[clampedIndex];
 			if (event) {
 				onEdit(event);
+			}
+		} else if (key.ctrl && key.name === "d") {
+			const event = filteredEvents[clampedIndex];
+			if (event) {
+				Effect.runSync(deleteEvent(event.id));
+				// Adjust selection if we're at the end
+				if (selectedIndex >= filteredEvents.length - 1 && selectedIndex > 0) {
+					setSelectedIndex(selectedIndex - 1);
+				}
+				// Force re-render to reflect the deletion immediately
+				forceUpdate();
 			}
 		}
 	});
