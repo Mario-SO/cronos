@@ -116,7 +116,9 @@ export const deleteEventById = (id: string) =>
 export const findEventsByDate = (dateKey: string) =>
 	Effect.sync(() => {
 		const db = getDatabase();
-		const stmt = db.prepare("SELECT * FROM events WHERE date = ? ORDER BY start_time ASC NULLS FIRST");
+		const stmt = db.prepare(
+			"SELECT * FROM events WHERE date = ? ORDER BY start_time ASC NULLS FIRST",
+		);
 		const rows = stmt.all(dateKey) as EventRow[];
 		return rows.map(rowToEvent);
 	});
@@ -127,7 +129,9 @@ export const findEventsByDate = (dateKey: string) =>
 export const findAllEvents = () =>
 	Effect.sync(() => {
 		const db = getDatabase();
-		const stmt = db.prepare("SELECT * FROM events ORDER BY date ASC, start_time ASC NULLS FIRST");
+		const stmt = db.prepare(
+			"SELECT * FROM events ORDER BY date ASC, start_time ASC NULLS FIRST",
+		);
 		const rows = stmt.all() as EventRow[];
 		return rows.map(rowToEvent);
 	});

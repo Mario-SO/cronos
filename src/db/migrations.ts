@@ -48,7 +48,9 @@ const MIGRATIONS: Migration[] = [
  */
 function getCurrentVersion(db: Database): number {
 	try {
-		const result = db.query("SELECT MAX(version) as version FROM schema_version").get() as { version: number | null } | null;
+		const result = db
+			.query("SELECT MAX(version) as version FROM schema_version")
+			.get() as { version: number | null } | null;
 		return result?.version ?? 0;
 	} catch {
 		// Table doesn't exist yet
@@ -62,7 +64,9 @@ function getCurrentVersion(db: Database): number {
  */
 export function runMigrations(db: Database): void {
 	const currentVersion = getCurrentVersion(db);
-	const pendingMigrations = MIGRATIONS.filter((m) => m.version > currentVersion);
+	const pendingMigrations = MIGRATIONS.filter(
+		(m) => m.version > currentVersion,
+	);
 
 	if (pendingMigrations.length === 0) {
 		return;
@@ -72,7 +76,9 @@ export function runMigrations(db: Database): void {
 	for (const migration of pendingMigrations) {
 		db.transaction(() => {
 			migration.up(db);
-			db.run("INSERT OR REPLACE INTO schema_version (version) VALUES (?)", [migration.version]);
+			db.run("INSERT OR REPLACE INTO schema_version (version) VALUES (?)", [
+				migration.version,
+			]);
 		})();
 	}
 }
