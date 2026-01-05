@@ -5,6 +5,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "bun run --watch src/index.tsx",
+		"db:populate": "bun run src/scripts/populateDb.ts",
 		"test": "bun test",
 		"test:watch": "bun test --watch"
 	},
