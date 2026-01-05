@@ -78,7 +78,7 @@ export function SearchEventsModal({
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	// Force re-render after delete since events come from external store
-	const [eventsVersion, forceUpdate] = useReducer((x) => x + 1, 0);
+	const [_, forceUpdate] = useReducer((x) => x + 1, 0);
 	// Calculate visible events: modalHeight - fixed elements - container borders
 	// Fixed elements: title(1+margin=2) + input(3+margin=4) + help(1+margin=2) + padding(2) = 10
 	// Container needs: visibleEvents + 2 (borders)
