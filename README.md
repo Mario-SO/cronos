@@ -13,7 +13,7 @@ bun dev
 
 | Key | Action |
 |-----|--------|
-| `←` / `→` | Previous / Next month |
+| `[` / `]` | Previous / Next month |
 | `h` / `l` | Previous / Next day |
 | `k` / `j` | Previous / Next week |
 | `t` | Jump to today |
