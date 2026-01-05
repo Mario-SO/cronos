@@ -2,6 +2,8 @@
 
 A terminal calendar app built with OpenTUI.
 
+https://github.com/user-attachments/assets/d26b4de6-23c7-4ac3-9147-4517389c3c5e
+
 ## Usage
 
 ```bash
