@@ -1,12 +1,10 @@
 {
 	"typescript.tsdk": "node_modules/typescript/lib",
 
-	// Format with Biome on save
 	"editor.formatOnSave": true,
 	"editor.defaultFormatter": "biomejs.biome",
 
-	// Sort/organize imports on save
 	"editor.codeActionsOnSave": {
-		"source.organizeImports": "explicit"
+		"source.organizeImports.biome": "explicit"
 	}
 }
