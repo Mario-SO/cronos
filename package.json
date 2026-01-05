@@ -1,0 +1,22 @@
+{
+  "name": "cronos-tui",
+  "module": "src/index.tsx",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --watch src/index.tsx"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.11",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.68",
+    "@opentui/react": "^0.1.68",
+    "effect": "^3.19.14",
+    "react": "^19.2.3"
+  }
+}
