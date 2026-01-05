@@ -235,9 +235,9 @@ describe("getMonthName", () => {
 			"November",
 			"December",
 		];
-		for (let i = 0; i < 12; i++) {
-			expect(getMonthName(i)).toBe(expected[i]);
-		}
+		expected.forEach((name, i) => {
+			expect(getMonthName(i)).toBe(name);
+		});
 	});
 
 	test("returns empty string for invalid month", () => {
@@ -262,9 +262,9 @@ describe("getShortMonthName", () => {
 			"Nov",
 			"Dec",
 		];
-		for (let i = 0; i < 12; i++) {
-			expect(getShortMonthName(i)).toBe(expected[i]);
-		}
+		expected.forEach((name, i) => {
+			expect(getShortMonthName(i)).toBe(name);
+		});
 	});
 
 	test("returns empty string for invalid month", () => {
@@ -288,9 +288,9 @@ describe("parseMonthAbbrev", () => {
 			"nov",
 			"dec",
 		];
-		for (let i = 0; i < 12; i++) {
-			expect(parseMonthAbbrev(abbrevs[i])).toBe(i);
-		}
+		abbrevs.forEach((abbrev, i) => {
+			expect(parseMonthAbbrev(abbrev)).toBe(i);
+		});
 	});
 
 	test("parses full month names", () => {

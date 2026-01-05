@@ -1,7 +1,7 @@
 import * as app from "@core/commands/app";
 import * as calendar from "@core/commands/calendar";
 import * as modal from "@core/commands/modal";
-import type { Command } from "../types";
+import type { Command } from "@core/types";
 
 export { app, calendar, modal };
 
