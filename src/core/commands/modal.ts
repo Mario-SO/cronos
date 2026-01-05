@@ -1,5 +1,5 @@
+import { closeModal, openModal } from "@state/modal";
 import { Effect } from "effect";
-import { closeModal, openModal } from "../state/modal";
 
 export function openAdd() {
 	Effect.runSync(openModal("add"));

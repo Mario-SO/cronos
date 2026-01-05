@@ -1,14 +1,14 @@
+import { AddEventModal } from "@components/AddEventModal";
+import { CalendarView } from "@components/CalendarView";
+import { GoToDateModal } from "@components/GoToDateModal";
+import { ViewEventsModal } from "@components/ViewEventsModal";
+import { useShortcutHandler } from "@core/keyboard";
+import type { CalendarEvent, Scope } from "@core/types";
+import { THEME } from "@lib/colors";
+import { calendarStateRef, goToDate } from "@state/calendar";
+import { closeModal, openEditModal, useModalState } from "@state/modal";
 import { Effect, Ref } from "effect";
 import { useCallback, useState } from "react";
-import { AddEventModal } from "./components/AddEventModal";
-import { CalendarView } from "./components/CalendarView";
-import { GoToDateModal } from "./components/GoToDateModal";
-import { ViewEventsModal } from "./components/ViewEventsModal";
-import { useShortcutHandler } from "./keyboard";
-import { THEME } from "./lib/colors";
-import { calendarStateRef, goToDate } from "./state/calendar";
-import { closeModal, openEditModal, useModalState } from "./state/modal";
-import type { CalendarEvent, Scope } from "./types";
 
 export function App() {
 	// Force re-render when state changes

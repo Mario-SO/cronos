@@ -1,4 +1,4 @@
-import type { ColorName } from "../types";
+import type { ColorName } from "@core/types";
 
 // Cursor Dark theme
 export const COLORS: Record<ColorName, string> = {

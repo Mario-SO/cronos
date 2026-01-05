@@ -1,15 +1,15 @@
-import type { ScrollBoxRenderable } from "@opentui/core";
-import { useKeyboard } from "@opentui/react";
-import { Effect } from "effect";
-import { useEffect, useReducer, useRef, useState } from "react";
-import { getColorHex, THEME } from "../lib/colors";
+import type { CalendarEvent } from "@core/types";
+import { getColorHex, THEME } from "@lib/colors";
 import {
 	VIEW_MODAL_TITLE_LENGTH,
 	VIEW_MODAL_VISIBLE_EVENTS,
-} from "../lib/constants";
-import { formatDateKey, formatTimeRange } from "../lib/dateUtils";
-import { deleteEvent, useEventsForDate } from "../state/events";
-import type { CalendarEvent } from "../types";
+} from "@lib/constants";
+import { formatDateKey, formatTimeRange } from "@lib/dateUtils";
+import type { ScrollBoxRenderable } from "@opentui/core";
+import { useKeyboard } from "@opentui/react";
+import { deleteEvent, useEventsForDate } from "@state/events";
+import { Effect } from "effect";
+import { useEffect, useReducer, useRef, useState } from "react";
 
 interface ViewEventsModalProps {
 	selectedDate: Date;

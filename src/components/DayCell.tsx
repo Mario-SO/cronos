@@ -1,9 +1,6 @@
-import { getColorHex, THEME } from "../lib/colors";
-import {
-	DAY_CELL_EVENT_PREVIEWS,
-	DAY_CELL_TITLE_LENGTH,
-} from "../lib/constants";
-import type { CalendarEvent } from "../types";
+import type { CalendarEvent } from "@core/types";
+import { getColorHex, THEME } from "@lib/colors";
+import { DAY_CELL_EVENT_PREVIEWS, DAY_CELL_TITLE_LENGTH } from "@lib/constants";
 
 interface DayCellProps {
 	day: number;

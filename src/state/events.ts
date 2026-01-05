@@ -1,6 +1,6 @@
+import type { CalendarEvent, ColorName } from "@core/types";
+import { MAX_EVENTS } from "@lib/constants";
 import { Effect, Ref } from "effect";
-import { MAX_EVENTS } from "../lib/constants";
-import type { CalendarEvent, ColorName } from "../types";
 
 type EventStore = Map<string, CalendarEvent[]>; // key: YYYY-MM-DD
 

@@ -1,11 +1,11 @@
+import type { CalendarEvent } from "@core/types";
+import { getColorHex, THEME } from "@lib/colors";
+import { formatDateKey, formatTimeRange } from "@lib/dateUtils";
+import { parseEventInput, reconstructEventInput } from "@lib/eventParser";
 import { useKeyboard } from "@opentui/react";
+import { addEvent, updateEvent } from "@state/events";
 import { Effect } from "effect";
 import { useState } from "react";
-import { getColorHex, THEME } from "../lib/colors";
-import { formatDateKey, formatTimeRange } from "../lib/dateUtils";
-import { parseEventInput, reconstructEventInput } from "../lib/eventParser";
-import { addEvent, updateEvent } from "../state/events";
-import type { CalendarEvent } from "../types";
 
 interface AddEventModalProps {
 	selectedDate: Date;

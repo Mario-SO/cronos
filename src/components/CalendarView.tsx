@@ -1,4 +1,5 @@
-import { THEME } from "../lib/colors";
+import type { CalendarState } from "@core/types";
+import { THEME } from "@lib/colors";
 import {
 	formatDateKey,
 	getDaysInMonth,
@@ -6,9 +7,8 @@ import {
 	getWeekdayOfFirst,
 	isSameDay,
 	WEEKDAY_HEADERS,
-} from "../lib/dateUtils";
-import { useEventStore } from "../state/events";
-import type { CalendarState } from "../types";
+} from "@lib/dateUtils";
+import { useEventStore } from "@state/events";
 import { DayCell } from "./DayCell";
 
 interface CalendarViewProps {

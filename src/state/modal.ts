@@ -1,5 +1,5 @@
+import type { CalendarEvent, ModalState, ModalType } from "@core/types";
 import { Effect, Ref } from "effect";
-import type { CalendarEvent, ModalState, ModalType } from "../types";
 
 const initialModalState: ModalState = {
 	type: "none",

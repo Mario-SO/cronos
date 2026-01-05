@@ -1,4 +1,4 @@
-import type { ColorName, ParsedEventInput } from "../types";
+import type { ColorName, ParsedEventInput } from "@core/types";
 import { COLOR_NAMES, getColorByIndex } from "./colors";
 
 // Parse time like "2pm", "2:30pm", "14:00", "14"

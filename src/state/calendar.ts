@@ -1,11 +1,11 @@
-import { Effect, Ref } from "effect";
+import type { CalendarState } from "@core/types";
 import {
 	addDays,
 	addMonths,
 	getFirstDayOfMonth,
 	isSameMonth,
-} from "../lib/dateUtils";
-import type { CalendarState } from "../types";
+} from "@lib/dateUtils";
+import { Effect, Ref } from "effect";
 
 const today = new Date();
 

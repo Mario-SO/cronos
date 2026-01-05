@@ -1,4 +1,3 @@
-import { Effect } from "effect";
 import {
 	goToNextMonth,
 	goToPreviousMonth,
@@ -7,7 +6,8 @@ import {
 	selectNextWeek,
 	selectPreviousDay,
 	selectPreviousWeek,
-} from "../state/calendar";
+} from "@state/calendar";
+import { Effect } from "effect";
 
 export function prevMonth() {
 	Effect.runSync(goToPreviousMonth);

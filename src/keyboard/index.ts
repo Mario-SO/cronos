@@ -1,2 +1,6 @@
-export { findShortcut, getShortcutsForScope, shortcuts } from "./registry";
-export { useShortcutHandler } from "./useShortcutHandler";
+export {
+	findShortcut,
+	getShortcutsForScope,
+	shortcuts,
+} from "@core/keyboard/registry";
+export { useShortcutHandler } from "@core/keyboard/useShortcutHandler";

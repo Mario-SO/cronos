@@ -1,11 +1,11 @@
-import { useKeyboard } from "@opentui/react";
-import { useState } from "react";
-import { THEME } from "../lib/colors";
+import { THEME } from "@lib/colors";
 import {
 	getShortMonthName,
 	isValidDate,
 	parseMonthAbbrev,
-} from "../lib/dateUtils";
+} from "@lib/dateUtils";
+import { useKeyboard } from "@opentui/react";
+import { useState } from "react";
 
 interface GoToDateModalProps {
 	currentDate: Date;
