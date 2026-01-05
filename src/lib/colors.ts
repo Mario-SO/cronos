@@ -1,7 +1,6 @@
 import type { ColorName } from "../types";
 
-// Cursor Dark theme palette
-// Based on: https://github.com/ydkulks/cursor-dark
+// Cursor Dark theme
 export const COLORS: Record<ColorName, string> = {
 	gray: "#505050",
 	blue: "#85C1FC",

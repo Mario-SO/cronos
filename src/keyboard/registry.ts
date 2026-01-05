@@ -10,8 +10,8 @@ import type { Shortcut } from "../types";
  */
 export const shortcuts: Shortcut[] = [
 	// Calendar navigation (root scope)
-	{ key: "left", command: "calendar.prevMonth", description: "Previous month" },
-	{ key: "right", command: "calendar.nextMonth", description: "Next month" },
+	{ key: "[", command: "calendar.prevMonth", description: "Previous month" },
+	{ key: "]", command: "calendar.nextMonth", description: "Next month" },
 	{ key: "h", command: "calendar.prevDay", description: "Previous day" },
 	{ key: "l", command: "calendar.nextDay", description: "Next day" },
 	{ key: "k", command: "calendar.prevWeek", description: "Previous week" },
