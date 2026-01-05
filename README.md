@@ -1,33 +1,61 @@
 # Cronos
 
-Minimal calendar app built with Sokol + Zig.
+A terminal calendar app built with OpenTUI.
 
-[Small preview](https://x.com/mariodev__/status/2007890169459057138?s=20)
+## Usage
 
-Features:
-- Month grid with today/selection highlight
-- Add events and list/delete events in modals
-- Keyboard-first navigation (H/J/K/L, arrows, A/T/V)
+```bash
+bun install
+bun dev
+```
 
-Project layout:
-- `lib/cronos/` time/date/calendar/event logic (library code)
-- `src/app/` state + commands + shortcuts
-- `src/ui/` calendar view and modals
-- `src/render/` Sokol render helpers
-- `src/platform/` macOS window tweaks
+## Keyboard Shortcuts
 
-Build:
-- `zig build run`
+| Key | Action |
+|-----|--------|
+| `[` / `]` | Previous / Next month |
+| `h` / `l` | Previous / Next day |
+| `k` / `j` | Previous / Next week |
+| `t` | Jump to today |
+| `a` | Add event |
+| `v` | View events |
+| `g` | Go to date |
+| `q` | Quit |
 
-Roadmap for v1.0:
-- [x] Go to date
-- [x] Richer events (time duration, color)
-- [x] Edit events
-- [ ] Search through event list
-- [ ] Persistance
-- [x] Event previews in monthly view
-- [ ] Week and day views
-- [ ] Settings
-- [ ] ImGui debugging
-- [ ] Mac App
-- [ ] Customization?
+## Adding a Shortcut
+
+1. **Add the command** to the `Command` type in `src/types.ts`
+2. **Implement the command** in `src/commands/` (calendar, modal, or app)
+3. **Register the shortcut** in `src/keyboard/registry.ts`
+
+Example:
+
+```ts
+// 1. types.ts
+export type Command = 
+  | ... 
+  | "calendar.nextYear"
+
+// 2. commands/calendar.ts
+export function nextYear() {
+  // implementation
+}
+
+// 3. commands/index.ts - add case to execute()
+case "calendar.nextYear":
+  calendar.nextYear()
+  break
+
+// 4. keyboard/registry.ts
+{ key: "n", command: "calendar.nextYear", description: "Next year" },
+```
+
+## Roadmap
+
+- [ ] Google Calendar sync
+- [ ] iCal export/import
+- [x] persistent storage
+- [ ] search through event list
+- [ ] settings
+- [ ] recurring events
+- [ ] cli support

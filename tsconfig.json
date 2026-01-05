@@ -1,0 +1,40 @@
+{
+	"compilerOptions": {
+		// Environment setup & latest features
+		"lib": ["ESNext"],
+		"target": "ESNext",
+		"module": "Preserve",
+		"moduleDetection": "force",
+		"jsx": "react-jsx",
+		"jsxImportSource": "@opentui/react",
+		"allowJs": true,
+
+		// Bundler mode
+		"moduleResolution": "bundler",
+		"allowImportingTsExtensions": true,
+		"verbatimModuleSyntax": true,
+		"noEmit": true,
+
+		// Path aliases
+		"baseUrl": ".",
+		"paths": {
+			"@core/*": ["src/core/*"],
+			"@components/*": ["src/components/*"],
+			"@db/*": ["src/db/*"],
+			"@lib/*": ["src/lib/*"],
+			"@state/*": ["src/state/*"]
+		},
+
+		// Best practices
+		"strict": true,
+		"skipLibCheck": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+
+		// Some stricter flags (disabled by default)
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"noPropertyAccessFromIndexSignature": false
+	}
+}
