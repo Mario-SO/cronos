@@ -1,8 +1,6 @@
 import { Effect, Ref } from "effect";
+import { MAX_EVENTS } from "../lib/constants";
 import type { CalendarEvent, ColorName } from "../types";
-
-// In-memory event store (max ~200 events)
-const MAX_EVENTS = 200;
 
 type EventStore = Map<string, CalendarEvent[]>; // key: YYYY-MM-DD
 
@@ -15,6 +13,16 @@ let eventIdCounter = 0;
 function generateEventId(): string {
 	eventIdCounter++;
 	return `event-${eventIdCounter}-${Date.now()}`;
+}
+
+/** Sort events: all-day first, then by start time */
+function sortDayEvents(events: CalendarEvent[]): CalendarEvent[] {
+	return events.toSorted((a, b) => {
+		if (a.startTime === undefined && b.startTime === undefined) return 0;
+		if (a.startTime === undefined) return -1;
+		if (b.startTime === undefined) return 1;
+		return a.startTime - b.startTime;
+	});
 }
 
 // Get events for a specific date
@@ -54,14 +62,10 @@ export const addEvent = (
 		};
 
 		const newStore = new Map(store);
-		const dayEvents = [...(newStore.get(dateKey) ?? []), newEvent];
-		// Sort events by time (all-day first, then by start time)
-		dayEvents.sort((a, b) => {
-			if (a.startTime === undefined && b.startTime === undefined) return 0;
-			if (a.startTime === undefined) return -1;
-			if (b.startTime === undefined) return 1;
-			return a.startTime - b.startTime;
-		});
+		const dayEvents = sortDayEvents([
+			...(newStore.get(dateKey) ?? []),
+			newEvent,
+		]);
 		newStore.set(dateKey, dayEvents);
 
 		yield* Ref.set(eventStoreRef, newStore);
@@ -93,30 +97,16 @@ export const updateEvent = (
 						newStore.set(dateKey, newEvents);
 					}
 					// Add to new date
-					const targetEvents = [
+					const targetEvents = sortDayEvents([
 						...(newStore.get(updates.date) ?? []),
 						updatedEvent,
-					];
-					targetEvents.sort((a, b) => {
-						if (a.startTime === undefined && b.startTime === undefined)
-							return 0;
-						if (a.startTime === undefined) return -1;
-						if (b.startTime === undefined) return 1;
-						return a.startTime - b.startTime;
-					});
+					]);
 					newStore.set(updates.date, targetEvents);
 				} else {
 					// Update in place
 					const newEvents = [...events];
 					newEvents[eventIndex] = updatedEvent;
-					newEvents.sort((a, b) => {
-						if (a.startTime === undefined && b.startTime === undefined)
-							return 0;
-						if (a.startTime === undefined) return -1;
-						if (b.startTime === undefined) return 1;
-						return a.startTime - b.startTime;
-					});
-					newStore.set(dateKey, newEvents);
+					newStore.set(dateKey, sortDayEvents(newEvents));
 				}
 
 				yield* Ref.set(eventStoreRef, newStore);

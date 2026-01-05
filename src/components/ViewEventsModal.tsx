@@ -3,6 +3,10 @@ import { useKeyboard } from "@opentui/react";
 import { Effect } from "effect";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { getColorHex, THEME } from "../lib/colors";
+import {
+	VIEW_MODAL_TITLE_LENGTH,
+	VIEW_MODAL_VISIBLE_EVENTS,
+} from "../lib/constants";
 import { formatDateKey, formatTimeRange } from "../lib/dateUtils";
 import { deleteEvent, useEventsForDate } from "../state/events";
 import type { CalendarEvent } from "../types";
@@ -69,14 +73,16 @@ export function ViewEventsModal({
 		year: "numeric",
 	});
 
-	const maxVisibleEvents = 6;
 	const scrollboxRef = useRef<ScrollBoxRenderable>(null);
 
 	// Scroll to keep selected item visible
 	useEffect(() => {
 		if (scrollboxRef.current && events.length > 0) {
 			// Each event row is 1 line tall, calculate target scroll position
-			const targetScrollTop = Math.max(0, clampedIndex - maxVisibleEvents + 1);
+			const targetScrollTop = Math.max(
+				0,
+				clampedIndex - VIEW_MODAL_VISIBLE_EVENTS + 1,
+			);
 			scrollboxRef.current.scrollTop = targetScrollTop;
 		}
 	}, [clampedIndex, events.length]);
@@ -108,7 +114,7 @@ export function ViewEventsModal({
 			<box
 				style={{
 					flexDirection: "column",
-					height: maxVisibleEvents + 2,
+					height: VIEW_MODAL_VISIBLE_EVENTS + 2,
 					border: true,
 					borderColor: THEME.border,
 					overflow: "hidden",
@@ -122,7 +128,7 @@ export function ViewEventsModal({
 					<scrollbox
 						ref={scrollboxRef}
 						focused={false}
-						style={{ height: maxVisibleEvents }}
+						style={{ height: VIEW_MODAL_VISIBLE_EVENTS }}
 					>
 						{events.map((event, index) => {
 							const isSelected = index === clampedIndex;
@@ -149,7 +155,7 @@ export function ViewEventsModal({
 										fg={isSelected ? THEME.foreground : THEME.foregroundDim}
 										style={{ marginLeft: 1 }}
 									>
-										{event.title.slice(0, 28)}
+										{event.title.slice(0, VIEW_MODAL_TITLE_LENGTH)}
 									</text>
 									{isSelected && (
 										<text fg={THEME.selected} style={{ marginLeft: 1 }}>

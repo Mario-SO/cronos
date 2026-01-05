@@ -60,22 +60,27 @@ function parseTimeRange(
 	const endTime = parseTimeString(endPart);
 	if (endTime === null) return null;
 
-	// Try to parse start time - if it lacks am/pm, inherit from end
-	let startTime = parseTimeString(startPart);
-	if (startTime === null) {
-		// Maybe start is just a number like "2" in "2-3pm"
-		const startMatch = startPart.match(/^(\d{1,2})(?::(\d{2}))?$/);
-		if (startMatch) {
-			const endPeriod = endPart.match(/(am|pm)$/i);
-			if (endPeriod) {
-				// Inherit period from end
-				const reconstructed = startPart + endPeriod[1];
-				startTime = parseTimeString(reconstructed);
-			}
+	// Check if start part lacks am/pm - if so, inherit from end
+	const startHasAmPm = /(?:am|pm)$/i.test(startPart);
+	let startTime: number | null = null;
+
+	if (!startHasAmPm) {
+		// Try inheriting am/pm from end (e.g., "2-3pm" → "2pm-3pm")
+		const endPeriod = endPart.match(/(am|pm)$/i);
+		if (endPeriod) {
+			startTime = parseTimeString(startPart + endPeriod[1]);
 		}
 	}
 
+	// If inheritance didn't work or wasn't needed, parse as-is
+	if (startTime === null) {
+		startTime = parseTimeString(startPart);
+	}
+
 	if (startTime === null) return null;
+
+	// Reject inverted ranges (end before start)
+	if (endTime < startTime) return null;
 
 	return { start: startTime, end: endTime };
 }

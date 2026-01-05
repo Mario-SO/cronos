@@ -1,4 +1,8 @@
 import { getColorHex, THEME } from "../lib/colors";
+import {
+	DAY_CELL_EVENT_PREVIEWS,
+	DAY_CELL_TITLE_LENGTH,
+} from "../lib/constants";
 import type { CalendarEvent } from "../types";
 
 interface DayCellProps {
@@ -7,7 +11,6 @@ interface DayCellProps {
 	isSelected: boolean;
 	isCurrentMonth: boolean;
 	events: CalendarEvent[];
-	maxEventPreviews?: number;
 }
 
 export function DayCell({
@@ -16,8 +19,8 @@ export function DayCell({
 	isSelected,
 	isCurrentMonth,
 	events,
-	maxEventPreviews = 2,
 }: DayCellProps) {
+	const maxEventPreviews = DAY_CELL_EVENT_PREVIEWS;
 	// If we have more events than maxEventPreviews, we need space for "+x more"
 	// Box has height 5, borders take 2, leaving 3 content lines: day + 1 event + "+x more"
 	// So when showing "+x more", only display 1 event to fit in 3 lines
@@ -66,7 +69,7 @@ export function DayCell({
 						fg={isSelected ? THEME.background : THEME.foregroundDim}
 						style={{ marginLeft: 1 }}
 					>
-						{event.title.slice(0, 7)}
+						{event.title.slice(0, DAY_CELL_TITLE_LENGTH)}
 					</text>
 				</box>
 			))}

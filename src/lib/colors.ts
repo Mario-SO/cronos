@@ -1,13 +1,15 @@
 import type { ColorName } from "../types";
 
+// Cursor Dark theme palette
+// Based on: https://github.com/ydkulks/cursor-dark
 export const COLORS: Record<ColorName, string> = {
-	gray: "#6b7280",
-	blue: "#3b82f6",
-	green: "#22c55e",
-	red: "#ef4444",
-	yellow: "#eab308",
-	purple: "#a855f7",
-	orange: "#f97316",
+	gray: "#505050",
+	blue: "#85C1FC",
+	green: "#A3BE8C",
+	red: "#BF616A",
+	yellow: "#EBC88D",
+	purple: "#AA9BF5",
+	orange: "#EFB080",
 };
 
 export const COLOR_NAMES: ColorName[] = [
@@ -28,15 +30,33 @@ export function getColorHex(name: ColorName): string {
 	return COLORS[name];
 }
 
-// Theme colors for the UI
+// Cursor Dark theme for the UI
 export const THEME = {
-	background: "#1a1b26",
-	backgroundAlt: "#24283b",
-	foreground: "#c0caf5",
-	foregroundDim: "#565f89",
-	border: "#3b4261",
-	borderHighlight: "#7aa2f7",
-	today: "#9ece6a",
-	selected: "#7aa2f7",
-	error: "#f7768e",
+	// Backgrounds
+	background: "#141414",
+	backgroundAlt: "#1F1F1F",
+	backgroundDark: "#2A2A2A",
+	selection: "#2E2E2E",
+
+	// Foregrounds
+	foreground: "#D8DEE9",
+	foregroundDim: "#505050",
+
+	// Borders
+	border: "#2A2A2A",
+	borderHighlight: "#87C3FF",
+
+	// Semantic colors
+	today: "#A3BE8C",
+	selected: "#85C1FC",
+	cursor: "#87C3FF",
+	error: "#BF616A",
+	warning: "#EBC88D",
+	success: "#A3BE8C",
+	info: "#88C0D0",
+
+	// Accent colors
+	accent: "#AA9BF5",
+	accentAlt: "#C582BF",
+	cyan: "#83D6C5",
 };

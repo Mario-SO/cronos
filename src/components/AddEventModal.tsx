@@ -1,6 +1,6 @@
 import { useKeyboard } from "@opentui/react";
-import { useState } from "react";
 import { Effect } from "effect";
+import { useState } from "react";
 import { getColorHex, THEME } from "../lib/colors";
 import { formatDateKey, formatTimeRange } from "../lib/dateUtils";
 import { parseEventInput, reconstructEventInput } from "../lib/eventParser";
