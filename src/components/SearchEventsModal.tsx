@@ -92,10 +92,7 @@ export function SearchEventsModal({
 	const timeWidth = Math.max(13, Math.floor(modalWidth * 0.12)); // Time format: "2:47pm-4:28pm" ~13 chars
 
 	// Get all events
-	const allEvents = useMemo(
-		() => Effect.runSync(getAllEvents),
-		[eventsVersion],
-	);
+	const allEvents = useMemo(() => Effect.runSync(getAllEvents), []);
 
 	// Filter and sort events based on search query
 	const filteredEvents = useMemo(() => {
@@ -124,7 +121,7 @@ export function SearchEventsModal({
 	// Reset selection when query changes
 	useEffect(() => {
 		setSelectedIndex(0);
-	}, [searchQuery]);
+	}, []);
 
 	// Clamp selected index if list shrunk
 	const clampedIndex = Math.min(
@@ -274,7 +271,8 @@ export function SearchEventsModal({
 			{/* Help */}
 			<box style={{ marginTop: 1 }}>
 				<text fg={THEME.foregroundDim}>
-					↑/↓ Navigate | Enter Go to date | E Edit | Esc/S Close
+					↑/↓ Navigate | Enter Go to date | CTRL+E Edit | CTRL+D Delete | Esc
+					Close
 				</text>
 			</box>
 		</ModalFrame>
