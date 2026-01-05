@@ -1,4 +1,11 @@
 import type { CalendarEvent, ColorName } from "@core/types";
+import {
+	deleteEventById,
+	findAllEvents,
+	getMaxEventIdCounter,
+	insertEvent,
+	updateEventById,
+} from "@db/repository";
 import { MAX_EVENTS } from "@lib/constants";
 import { Effect, Ref } from "effect";
 
@@ -24,6 +31,35 @@ function sortDayEvents(events: CalendarEvent[]): CalendarEvent[] {
 		return a.startTime - b.startTime;
 	});
 }
+
+/** Group events by date key */
+function groupEventsByDate(events: CalendarEvent[]): EventStore {
+	const store: EventStore = new Map();
+	for (const event of events) {
+		const existing = store.get(event.date) ?? [];
+		store.set(event.date, [...existing, event]);
+	}
+	// Sort each day's events
+	for (const [dateKey, dayEvents] of store.entries()) {
+		store.set(dateKey, sortDayEvents(dayEvents));
+	}
+	return store;
+}
+
+/**
+ * Initialize the event store from SQLite.
+ * Should be called once at app startup after database initialization.
+ */
+export const initEventStore = Effect.gen(function* () {
+	// Load all events from database
+	const events = yield* findAllEvents();
+	const store = groupEventsByDate(events);
+	yield* Ref.set(eventStoreRef, store);
+
+	// Restore the event ID counter to avoid collisions
+	const maxCounter = yield* getMaxEventIdCounter();
+	eventIdCounter = maxCounter;
+});
 
 // Get events for a specific date
 export const getEventsForDate = (dateKey: string) =>
@@ -61,6 +97,10 @@ export const addEvent = (
 			color,
 		};
 
+		// Persist to SQLite
+		yield* insertEvent(newEvent);
+
+		// Update in-memory cache
 		const newStore = new Map(store);
 		const dayEvents = sortDayEvents([
 			...(newStore.get(dateKey) ?? []),
@@ -86,6 +126,9 @@ export const updateEvent = (
 			const event = events[eventIndex];
 			if (eventIndex !== -1 && event) {
 				const updatedEvent = { ...event, ...updates };
+
+				// Persist to SQLite
+				yield* updateEventById(eventId, updates);
 
 				// If date changed, move to new date
 				if (updates.date && updates.date !== dateKey) {
@@ -126,6 +169,10 @@ export const deleteEvent = (eventId: string) =>
 		for (const [dateKey, events] of newStore.entries()) {
 			const eventIndex = events.findIndex((e) => e.id === eventId);
 			if (eventIndex !== -1) {
+				// Persist to SQLite
+				yield* deleteEventById(eventId);
+
+				// Update in-memory cache
 				const newEvents = events.filter((e) => e.id !== eventId);
 				if (newEvents.length === 0) {
 					newStore.delete(dateKey);

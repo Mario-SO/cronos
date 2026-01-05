@@ -49,3 +49,13 @@ case "calendar.nextYear":
 // 4. keyboard/registry.ts
 { key: "n", command: "calendar.nextYear", description: "Next year" },
 ```
+
+## Roadmap
+
+- [ ] Google Calendar sync
+- [ ] iCal export/import
+- [x] persistent storage
+- [ ] search through event list
+- [ ] settings
+- [ ] recurring events
+- [ ] cli support
