@@ -7,7 +7,7 @@ import type { ScrollBoxRenderable } from "@opentui/core";
 import { useKeyboard } from "@opentui/react";
 import { deleteEvent, getAllEvents } from "@state/events";
 import { Effect } from "effect";
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ModalFrame } from "./ModalFrame";
 
 interface SearchEventsModalProps {
@@ -77,8 +77,10 @@ export function SearchEventsModal({
 	});
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);
-	// Force re-render after delete since events come from external store
-	const [_, forceUpdate] = useReducer((x) => x + 1, 0);
+	// Local snapshot since the event store is external to React.
+	const [allEvents, setAllEvents] = useState<CalendarEvent[]>(() =>
+		Effect.runSync(getAllEvents),
+	);
 	// Calculate visible events: modalHeight - fixed elements - container borders
 	// Fixed elements: title(1+margin=2) + input(3+margin=4) + help(1+margin=2) + padding(2) = 10
 	// Container needs: visibleEvents + 2 (borders)
@@ -90,9 +92,6 @@ export function SearchEventsModal({
 	// Calculate responsive widths for date and time columns
 	const dateWidth = Math.max(12, Math.floor(modalWidth * 0.12)); // Date format: "Apr 28, 2031" ~12 chars
 	const timeWidth = Math.max(13, Math.floor(modalWidth * 0.12)); // Time format: "2:47pm-4:28pm" ~13 chars
-
-	// Get all events
-	const allEvents = useMemo(() => Effect.runSync(getAllEvents), []);
 
 	// Filter and sort events based on search query
 	const filteredEvents = useMemo(() => {
@@ -117,11 +116,6 @@ export function SearchEventsModal({
 
 		return scored.map((item) => item.event);
 	}, [allEvents, searchQuery]);
-
-	// Reset selection when query changes
-	useEffect(() => {
-		setSelectedIndex(0);
-	}, []);
 
 	// Clamp selected index if list shrunk
 	const clampedIndex = Math.min(
@@ -169,12 +163,10 @@ export function SearchEventsModal({
 			const event = filteredEvents[clampedIndex];
 			if (event) {
 				Effect.runSync(deleteEvent(event.id));
-				// Adjust selection if we're at the end
 				if (selectedIndex >= filteredEvents.length - 1 && selectedIndex > 0) {
 					setSelectedIndex(selectedIndex - 1);
 				}
-				// Force re-render to reflect the deletion immediately
-				forceUpdate();
+				setAllEvents(Effect.runSync(getAllEvents));
 			}
 		}
 	});
@@ -199,7 +191,10 @@ export function SearchEventsModal({
 					placeholder="Type to search..."
 					value={searchQuery}
 					focused
-					onInput={setSearchQuery}
+					onInput={(value) => {
+						setSearchQuery(value);
+						setSelectedIndex(0);
+					}}
 				/>
 			</box>
 

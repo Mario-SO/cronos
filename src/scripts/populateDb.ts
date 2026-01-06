@@ -52,11 +52,22 @@ const DATE_SEEDS: Array<[number, number, number]> = [
 	[2031, 3, 28],
 ];
 
+function pickSeed<T>(list: readonly T[], index: number, label: string): T {
+	if (list.length === 0) {
+		throw new Error(`${label} cannot be empty.`);
+	}
+	const value = list[index % list.length];
+	if (value === undefined) {
+		throw new Error(`${label} missing value at index ${index}.`);
+	}
+	return value;
+}
+
 function makeEvent(
 	index: number,
 	counterRef: { value: number },
 ): CalendarEvent {
-	const [year, month, day] = DATE_SEEDS[index % DATE_SEEDS.length];
+	const [year, month, day] = pickSeed(DATE_SEEDS, index, "DATE_SEEDS");
 	const dateKey = formatDateKey(new Date(year, month, day));
 	const isAllDay = index % 5 === 0;
 
@@ -78,7 +89,7 @@ function makeEvent(
 		title: `${TITLES[index % TITLES.length]} ${index + 1}`,
 		startTime,
 		endTime,
-		color: COLORS[index % COLORS.length],
+		color: pickSeed(COLORS, index, "COLORS"),
 	};
 }
 
