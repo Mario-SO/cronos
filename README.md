@@ -60,13 +60,14 @@ export const calendarCommands = [
 
 ## Roadmap
 
-- [ ] Google Calendar sync
+- [ ] Help on '?'
 - [ ] Yearly view
-- [ ] Multiple day events
+- [ ] Settings modal
+    - [ ] Google Calendar sync
+    - [ ] iCal export/import
+- [ ] Multiple day events??
 - [ ] Recurring events
+- [ ] cli support (cronos add ...)
 - [x] Agenda side view
-- [ ] iCal export/import
 - [x] Persistent storage
 - [x] Search through event list
-- [ ] Settings
-- [ ] cli support
