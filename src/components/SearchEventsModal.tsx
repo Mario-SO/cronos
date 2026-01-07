@@ -1,7 +1,8 @@
 import {
-	formatHelpText,
+	buildHelpKeyMap,
 	getActiveBindings,
 	getCommandContext,
+	joinHelpKeys,
 	setSearchModalCommandHandlers,
 } from "@core/commands";
 import type { CalendarEvent } from "@core/types";
@@ -184,9 +185,37 @@ export function SearchEventsModal({
 		return () => setSearchModalCommandHandlers(null);
 	}, [searchHandlers]);
 
-	const helpText = formatHelpText(
-		getActiveBindings(getCommandContext(), { layerIds: ["modal:search"] }),
+	const ctx = getCommandContext();
+	const bindings = getActiveBindings(ctx, { layerIds: ["modal:search"] });
+	const keyMap = buildHelpKeyMap(bindings);
+	const normalizeKey = (key: string) => {
+		if (key === "Up") return "↑";
+		if (key === "Down") return "↓";
+		return key;
+	};
+	const buildKeys = (commandIds: string[], order?: string[]) =>
+		joinHelpKeys(keyMap, commandIds, { order, normalizeKey });
+	const helpParts: string[] = [];
+	const navKeys = buildKeys(
+		["modal.search.moveUp", "modal.search.moveDown"],
+		["↑", "↓"],
 	);
+	if (navKeys) {
+		helpParts.push(`${navKeys} Navigate`);
+	}
+	const goKeys = buildKeys(["modal.search.goTo", "modal.search.edit"]);
+	if (goKeys) {
+		helpParts.push(`${goKeys} Open`);
+	}
+	const deleteKeys = buildKeys(["modal.search.delete"]);
+	if (deleteKeys) {
+		helpParts.push(`${deleteKeys} Delete`);
+	}
+	const closeKeys = buildKeys(["modal.close"], ["Esc"]);
+	if (closeKeys) {
+		helpParts.push(`${closeKeys} Close`);
+	}
+	const helpText = helpParts.length > 0 ? helpParts.join(" | ") : "";
 
 	return (
 		<ModalFrame width={modalWidth} height={modalHeight}>
