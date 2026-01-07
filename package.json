@@ -6,23 +6,21 @@
 	"scripts": {
 		"dev": "bun run --watch src/index.tsx",
 		"db:populate": "bun run src/scripts/populateDb.ts",
-		"format": "bunx biome format --write .",
 		"hooks:install": "git config core.hooksPath .githooks",
-		"lint": "bunx biome lint .",
+		"check": "bunx biome lint . && bunx biome format --write . && bunx tsc --noEmit",
 		"test": "bun test",
-		"test:watch": "bun test --watch",
-		"typecheck": "bunx tsc --noEmit"
+		"test:watch": "bun test --watch"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.11",
 		"@types/bun": "latest"
 	},
 	"peerDependencies": {
-		"typescript": "^5"
+		"typescript": "^5.9.2"
 	},
 	"dependencies": {
-		"@opentui/core": "^0.1.68",
-		"@opentui/react": "^0.1.68",
+		"@opentui/core": "^0.1.69",
+		"@opentui/react": "^0.1.69",
 		"effect": "^3.19.14",
 		"react": "^19.2.3"
 	}
