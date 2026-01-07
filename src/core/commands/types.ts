@@ -54,7 +54,5 @@ export interface CommandDefinition {
 	keys?: KeyBindingInput[];
 	layers?: readonly CommandLayerId[];
 	when?: (ctx: CommandContext) => boolean;
-	run: (
-		ctx: CommandContext,
-	) => Effect.Effect<unknown, unknown, never> | void;
+	run: (ctx: CommandContext) => Effect.Effect<unknown, unknown, never> | void;
 }
