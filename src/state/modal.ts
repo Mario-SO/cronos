@@ -1,5 +1,10 @@
 import type { CalendarEvent, ModalState, ModalType } from "@core/types";
-import { Effect, Ref } from "effect";
+import { Effect, SubscriptionRef } from "effect";
+import {
+	createSubscriptionRef,
+	getSubscriptionValue,
+	useSubscriptionValue,
+} from "./store";
 
 const initialModalState: ModalState = {
 	type: "none",
@@ -7,29 +12,42 @@ const initialModalState: ModalState = {
 };
 
 // Create ref for modal state
-export const modalStateRef = Effect.runSync(Ref.make(initialModalState));
+export const modalStateRef = createSubscriptionRef(initialModalState);
 
 // Modal effects
 export const openModal = (type: ModalType) =>
 	Effect.gen(function* () {
-		yield* Ref.set(modalStateRef, { type, editingEvent: undefined });
+		yield* SubscriptionRef.set(modalStateRef, {
+			type,
+			editingEvent: undefined,
+		});
 	});
 
 export const openEditModal = (event: CalendarEvent) =>
 	Effect.gen(function* () {
-		yield* Ref.set(modalStateRef, { type: "add", editingEvent: event });
+		yield* SubscriptionRef.set(modalStateRef, {
+			type: "add",
+			editingEvent: event,
+		});
 	});
 
 export const closeModal = Effect.gen(function* () {
-	yield* Ref.set(modalStateRef, { type: "none", editingEvent: undefined });
+	yield* SubscriptionRef.set(modalStateRef, {
+		type: "none",
+		editingEvent: undefined,
+	});
 });
 
 // Hook for React components
 export function useModalState(): ModalState {
-	return Effect.runSync(Ref.get(modalStateRef));
+	return useSubscriptionValue(modalStateRef);
 }
 
 // Get current modal type synchronously
 export function getModalType(): ModalType {
-	return Effect.runSync(Ref.get(modalStateRef)).type;
+	return getSubscriptionValue(modalStateRef).type;
+}
+
+export function getModalState(): ModalState {
+	return getSubscriptionValue(modalStateRef);
 }

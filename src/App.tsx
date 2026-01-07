@@ -13,26 +13,20 @@ import type { CalendarEvent } from "@core/types";
 import { useTerminalSize } from "@hooks/useTerminalSize";
 import { THEME } from "@lib/colors";
 import { useAgendaState } from "@state/agenda";
-import { calendarStateRef, goToDate } from "@state/calendar";
+import { goToDate, useCalendarState } from "@state/calendar";
 import { closeModal, openEditModal, useModalState } from "@state/modal";
-import { Effect, Ref } from "effect";
-import { useCallback, useState } from "react";
+import { Effect } from "effect";
+import { useCallback } from "react";
 
 export function App() {
-	// Force re-render when state changes
-	const [, forceUpdate] = useState(0);
-	const triggerUpdate = useCallback(() => forceUpdate((n) => n + 1), []);
-
-	// Read state synchronously
-	const calendarState = Effect.runSync(Ref.get(calendarStateRef));
+	// Read state via SubscriptionRef
+	const calendarState = useCalendarState();
 	const modalState = useModalState();
 	const agendaState = useAgendaState();
 	const terminalSize = useTerminalSize();
 
 	// Wire up keyboard shortcuts
-	useCommandHandler({
-		onCommandExecuted: triggerUpdate,
-	});
+	useCommandHandler();
 
 	const quitHint = (() => {
 		const ctx = getCommandContext();

@@ -1,5 +1,5 @@
-import { useAgendaState } from "@state/agenda";
-import { useModalState } from "@state/modal";
+import { getAgendaState } from "@state/agenda";
+import { getModalState } from "@state/modal";
 import type {
 	AddModalCommandHandlers,
 	AgendaCommandHandlers,
@@ -38,8 +38,8 @@ export function setSearchModalCommandHandlers(
 }
 
 export function getCommandContext(): CommandContext {
-	const modalState = useModalState();
-	const agendaState = useAgendaState();
+	const modalState = getModalState();
+	const agendaState = getAgendaState();
 	const agendaActive = modalState.type === "none" && agendaState.isOpen;
 
 	return {

@@ -5,7 +5,12 @@ import {
 	getFirstDayOfMonth,
 	isSameMonth,
 } from "@lib/dateUtils";
-import { Effect, Ref } from "effect";
+import { Effect, SubscriptionRef } from "effect";
+import {
+	createSubscriptionRef,
+	getSubscriptionValue,
+	useSubscriptionValue,
+} from "./store";
 
 const today = new Date();
 
@@ -15,12 +20,12 @@ const initialCalendarState: CalendarState = {
 };
 
 // Create ref for calendar state
-export const calendarStateRef = Effect.runSync(Ref.make(initialCalendarState));
+export const calendarStateRef = createSubscriptionRef(initialCalendarState);
 
 // Calendar navigation effects
 export const shiftDisplayedMonth = (months: number) =>
 	Effect.gen(function* () {
-		const state = yield* Ref.get(calendarStateRef);
+		const state = yield* SubscriptionRef.get(calendarStateRef);
 		const newMonth = addMonths(state.displayedMonth, months);
 		const newSelected = isSameMonth(state.selectedDate, state.displayedMonth)
 			? new Date(
@@ -36,7 +41,7 @@ export const shiftDisplayedMonth = (months: number) =>
 					),
 				)
 			: state.selectedDate;
-		yield* Ref.set(calendarStateRef, {
+		yield* SubscriptionRef.set(calendarStateRef, {
 			displayedMonth: newMonth,
 			selectedDate: newSelected,
 		});
@@ -44,9 +49,9 @@ export const shiftDisplayedMonth = (months: number) =>
 
 export const shiftSelectedDate = (days: number) =>
 	Effect.gen(function* () {
-		const state = yield* Ref.get(calendarStateRef);
+		const state = yield* SubscriptionRef.get(calendarStateRef);
 		const newDate = addDays(state.selectedDate, days);
-		yield* Ref.set(calendarStateRef, {
+		yield* SubscriptionRef.set(calendarStateRef, {
 			displayedMonth: isSameMonth(newDate, state.displayedMonth)
 				? state.displayedMonth
 				: getFirstDayOfMonth(newDate),
@@ -63,7 +68,7 @@ export const selectNextWeek = shiftSelectedDate(7);
 
 export const jumpToToday = Effect.gen(function* () {
 	const now = new Date();
-	yield* Ref.set(calendarStateRef, {
+	yield* SubscriptionRef.set(calendarStateRef, {
 		displayedMonth: getFirstDayOfMonth(now),
 		selectedDate: now,
 	});
@@ -71,7 +76,7 @@ export const jumpToToday = Effect.gen(function* () {
 
 export const goToDate = (date: Date) =>
 	Effect.gen(function* () {
-		yield* Ref.set(calendarStateRef, {
+		yield* SubscriptionRef.set(calendarStateRef, {
 			displayedMonth: getFirstDayOfMonth(date),
 			selectedDate: date,
 		});
@@ -79,5 +84,9 @@ export const goToDate = (date: Date) =>
 
 // Hook for React components
 export function useCalendarState(): CalendarState {
-	return Effect.runSync(Ref.get(calendarStateRef));
+	return useSubscriptionValue(calendarStateRef);
+}
+
+export function getCalendarState(): CalendarState {
+	return getSubscriptionValue(calendarStateRef);
 }

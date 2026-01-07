@@ -13,7 +13,7 @@ interface UseCommandHandlerOptions {
 
 export function useCommandHandler({
 	onCommandExecuted,
-}: UseCommandHandlerOptions): void {
+}: UseCommandHandlerOptions = {}): void {
 	const handleKey = useCallback(
 		(key: { name?: string; preventDefault?: () => void }) => {
 			if (!key.name) return;

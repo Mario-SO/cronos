@@ -7,13 +7,14 @@ import {
 	updateEventById,
 } from "@db/repository";
 import { MAX_EVENTS } from "@lib/constants";
-import { Effect, Ref } from "effect";
+import { Effect, SubscriptionRef } from "effect";
+import { createSubscriptionRef, useSubscriptionValue } from "./store";
 
 type EventStore = Map<string, CalendarEvent[]>; // key: YYYY-MM-DD
 
 const initialStore: EventStore = new Map();
 
-export const eventStoreRef = Effect.runSync(Ref.make(initialStore));
+export const eventStoreRef = createSubscriptionRef(initialStore);
 
 let eventIdCounter = 0;
 
@@ -54,7 +55,7 @@ export const initEventStore = Effect.gen(function* () {
 	// Load all events from database
 	const events = yield* findAllEvents();
 	const store = groupEventsByDate(events);
-	yield* Ref.set(eventStoreRef, store);
+	yield* SubscriptionRef.set(eventStoreRef, store);
 
 	// Restore the event ID counter to avoid collisions
 	const maxCounter = yield* getMaxEventIdCounter();
@@ -64,7 +65,7 @@ export const initEventStore = Effect.gen(function* () {
 // Get events for a specific date
 export const getEventsForDate = (dateKey: string) =>
 	Effect.gen(function* () {
-		const store = yield* Ref.get(eventStoreRef);
+		const store = yield* SubscriptionRef.get(eventStoreRef);
 		return store.get(dateKey) ?? [];
 	});
 
@@ -77,7 +78,7 @@ export const addEvent = (
 	color: ColorName = "gray",
 ) =>
 	Effect.gen(function* () {
-		const store = yield* Ref.get(eventStoreRef);
+		const store = yield* SubscriptionRef.get(eventStoreRef);
 
 		// Check capacity
 		let totalEvents = 0;
@@ -108,7 +109,7 @@ export const addEvent = (
 		]);
 		newStore.set(dateKey, dayEvents);
 
-		yield* Ref.set(eventStoreRef, newStore);
+		yield* SubscriptionRef.set(eventStoreRef, newStore);
 		return newEvent;
 	});
 
@@ -118,7 +119,7 @@ export const updateEvent = (
 	updates: Partial<Omit<CalendarEvent, "id">>,
 ) =>
 	Effect.gen(function* () {
-		const store = yield* Ref.get(eventStoreRef);
+		const store = yield* SubscriptionRef.get(eventStoreRef);
 		const newStore = new Map(store);
 
 		for (const [dateKey, events] of newStore.entries()) {
@@ -152,7 +153,7 @@ export const updateEvent = (
 					newStore.set(dateKey, sortDayEvents(newEvents));
 				}
 
-				yield* Ref.set(eventStoreRef, newStore);
+				yield* SubscriptionRef.set(eventStoreRef, newStore);
 				return updatedEvent;
 			}
 		}
@@ -163,7 +164,7 @@ export const updateEvent = (
 // Delete an event
 export const deleteEvent = (eventId: string) =>
 	Effect.gen(function* () {
-		const store = yield* Ref.get(eventStoreRef);
+		const store = yield* SubscriptionRef.get(eventStoreRef);
 		const newStore = new Map(store);
 
 		for (const [dateKey, events] of newStore.entries()) {
@@ -179,7 +180,7 @@ export const deleteEvent = (eventId: string) =>
 				} else {
 					newStore.set(dateKey, newEvents);
 				}
-				yield* Ref.set(eventStoreRef, newStore);
+				yield* SubscriptionRef.set(eventStoreRef, newStore);
 				return true;
 			}
 		}
@@ -189,7 +190,7 @@ export const deleteEvent = (eventId: string) =>
 
 // Get all events (for debugging or export)
 export const getAllEvents = Effect.gen(function* () {
-	const store = yield* Ref.get(eventStoreRef);
+	const store = yield* SubscriptionRef.get(eventStoreRef);
 	const allEvents: CalendarEvent[] = [];
 	for (const events of store.values()) {
 		allEvents.push(...events);
@@ -199,9 +200,10 @@ export const getAllEvents = Effect.gen(function* () {
 
 // Hook for React components
 export function useEventsForDate(dateKey: string): CalendarEvent[] {
-	return Effect.runSync(getEventsForDate(dateKey));
+	const store = useSubscriptionValue(eventStoreRef);
+	return store.get(dateKey) ?? [];
 }
 
 export function useEventStore(): EventStore {
-	return Effect.runSync(Ref.get(eventStoreRef));
+	return useSubscriptionValue(eventStoreRef);
 }
