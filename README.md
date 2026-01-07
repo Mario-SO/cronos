@@ -74,9 +74,12 @@ const commandHandlers: Record<Command, () => void> = {
 ## Roadmap
 
 - [ ] Google Calendar sync
+- [ ] Yearly view
+- [ ] Multiple day events
+- [ ] Agenda side view
 - [ ] iCal export/import
-- [x] persistent storage
-- [x] search through event list
-- [ ] settings
-- [ ] recurring events
+- [x] Persistent storage
+- [x] Search through event list
+- [ ] Settings
+- [ ] Recurring events
 - [ ] cli support
