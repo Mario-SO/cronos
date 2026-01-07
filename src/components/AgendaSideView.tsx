@@ -35,10 +35,6 @@ export function AgendaSideView({
 	const clampedIndex = Math.min(selectedIndex, Math.max(0, events.length - 1));
 
 	useEffect(() => {
-		setSelectedIndex(0);
-	}, []);
-
-	useEffect(() => {
 		setSelectedIndex((prev) => Math.min(prev, Math.max(0, events.length - 1)));
 	}, [events.length]);
 
