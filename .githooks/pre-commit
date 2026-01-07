@@ -1,6 +1,4 @@
 #!/bin/sh
 set -e
 
-bun run typecheck
-bun run format
-bun run lint
+bun run check
