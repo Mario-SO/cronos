@@ -3,8 +3,13 @@ import { AgendaSideView } from "@components/AgendaSideView";
 import { CalendarView } from "@components/CalendarView";
 import { GoToDateModal } from "@components/GoToDateModal";
 import { SearchEventsModal } from "@components/SearchEventsModal";
-import { useShortcutHandler } from "@core/keyboard";
-import type { CalendarEvent, Scope } from "@core/types";
+import {
+	formatHelpText,
+	getActiveBindings,
+	getCommandContext,
+} from "@core/commands";
+import { useCommandHandler } from "@core/keyboard";
+import type { CalendarEvent } from "@core/types";
 import { useTerminalSize } from "@hooks/useTerminalSize";
 import { THEME } from "@lib/colors";
 import { useAgendaState } from "@state/agenda";
@@ -24,45 +29,40 @@ export function App() {
 	const agendaState = useAgendaState();
 	const terminalSize = useTerminalSize();
 
-	// Determine current scope for shortcut handling
-	const scope: Scope = modalState.type === "none" ? "root" : modalState.type;
-
 	// Wire up keyboard shortcuts
-	useShortcutHandler({
-		scope,
+	useCommandHandler({
 		onCommandExecuted: triggerUpdate,
 	});
 
-	const handleCloseModal = useCallback(() => {
-		Effect.runSync(closeModal);
-		triggerUpdate();
-	}, [triggerUpdate]);
+	const quitHint = (() => {
+		const ctx = getCommandContext();
+		const bindings = getActiveBindings(ctx, { layerIds: ["global"] });
+		const quitBinding = bindings.find(
+			(binding) => binding.commandId === "app.quit",
+		);
+		return quitBinding ? formatHelpText([quitBinding]) : "";
+	})();
 
 	const handleSaveEvent = useCallback(() => {
 		Effect.runSync(closeModal);
-		triggerUpdate();
-	}, [triggerUpdate]);
+	}, []);
 
-	const handleEditEvent = useCallback(
-		(event: CalendarEvent) => {
-			Effect.runSync(openEditModal(event));
-			triggerUpdate();
-		},
-		[triggerUpdate],
-	);
+	const handleEditEvent = useCallback((event: CalendarEvent) => {
+		Effect.runSync(openEditModal(event));
+	}, []);
 
-	const handleGoToDate = useCallback(
-		(date: Date) => {
-			Effect.runSync(goToDate(date));
-			Effect.runSync(closeModal);
-			triggerUpdate();
-		},
-		[triggerUpdate],
-	);
+	const handleGoToDate = useCallback((date: Date) => {
+		Effect.runSync(goToDate(date));
+		Effect.runSync(closeModal);
+	}, []);
 
 	const minCalendarWidth = 58;
 	const minAgendaWidth = 18;
-	const agendaGutter = 2;
+	const minTotalWidth = minCalendarWidth + minAgendaWidth;
+	const agendaGutter = Math.max(
+		0,
+		Math.min(2, terminalSize.width - minTotalWidth),
+	);
 	const targetAgendaWidth = Math.min(
 		52,
 		Math.max(24, Math.floor(terminalSize.width * 0.32)),
@@ -85,7 +85,11 @@ export function App() {
 			}}
 		>
 			<box
-				style={{ flexGrow: 1, alignItems: "center", justifyContent: "center" }}
+				style={{
+					width: calendarWidth,
+					alignItems: "center",
+					justifyContent: "center",
+				}}
 			>
 				{/* Calendar View */}
 				<CalendarView
@@ -96,14 +100,19 @@ export function App() {
 			</box>
 
 			{agendaVisible && (
-				<box style={{ marginLeft: agendaGutter, justifyContent: "center" }}>
+				<box
+					style={{
+						width: agendaWidth,
+						marginLeft: agendaGutter,
+						justifyContent: "center",
+					}}
+				>
 					<AgendaSideView
 						selectedDate={calendarState.selectedDate}
 						width={agendaWidth}
 						height={agendaHeight}
 						isActive={modalState.type === "none"}
 						onEdit={handleEditEvent}
-						onEventsChanged={triggerUpdate}
 					/>
 				</box>
 			)}
@@ -113,7 +122,6 @@ export function App() {
 				<AddEventModal
 					selectedDate={calendarState.selectedDate}
 					editingEvent={modalState.editingEvent}
-					onClose={handleCloseModal}
 					onSave={handleSaveEvent}
 				/>
 			)}
@@ -121,23 +129,23 @@ export function App() {
 			{modalState.type === "goto" && (
 				<GoToDateModal
 					currentDate={calendarState.selectedDate}
-					onClose={handleCloseModal}
 					onGo={handleGoToDate}
 				/>
 			)}
 
 			{modalState.type === "search" && (
 				<SearchEventsModal
-					onClose={handleCloseModal}
 					onGoToDate={handleGoToDate}
 					onEdit={handleEditEvent}
 				/>
 			)}
 
 			{/* Quit hint */}
-			<box style={{ position: "absolute", bottom: 0, right: 1 }}>
-				<text fg={THEME.foregroundDim}>Q to quit</text>
-			</box>
+			{quitHint && (
+				<box style={{ position: "absolute", bottom: 0, right: 1 }}>
+					<text fg={THEME.foregroundDim}>{quitHint}</text>
+				</box>
+			)}
 		</box>
 	);
 }

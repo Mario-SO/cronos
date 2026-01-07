@@ -1,11 +1,17 @@
+import {
+	buildHelpKeyMap,
+	getActiveBindings,
+	getCommandContext,
+	joinHelpKeys,
+	setAgendaCommandHandlers,
+} from "@core/commands";
 import type { CalendarEvent } from "@core/types";
 import { getColorHex, THEME } from "@lib/colors";
 import { formatDateKey, formatTimeRange } from "@lib/dateUtils";
 import type { ScrollBoxRenderable } from "@opentui/core";
-import { useKeyboard } from "@opentui/react";
 import { deleteEvent, useEventsForDate } from "@state/events";
 import { Effect } from "effect";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface AgendaSideViewProps {
 	selectedDate: Date;
@@ -13,7 +19,6 @@ interface AgendaSideViewProps {
 	height: number;
 	isActive: boolean;
 	onEdit: (event: CalendarEvent) => void;
-	onEventsChanged: () => void;
 }
 
 export function AgendaSideView({
@@ -22,12 +27,10 @@ export function AgendaSideView({
 	height,
 	isActive,
 	onEdit,
-	onEventsChanged,
 }: AgendaSideViewProps) {
 	const dateKey = formatDateKey(selectedDate);
 	const events = useEventsForDate(dateKey);
 	const [selectedIndex, setSelectedIndex] = useState(0);
-	const [, forceUpdate] = useReducer((x) => x + 1, 0);
 
 	const clampedIndex = Math.min(selectedIndex, Math.max(0, events.length - 1));
 
@@ -71,33 +74,76 @@ export function AgendaSideView({
 		}
 	}, [clampedIndex, events.length, visibleEvents]);
 
-	useKeyboard((key) => {
-		if (!isActive) return;
-		if (events.length === 0) return;
+	const moveSelection = useCallback(
+		(delta: number) => {
+			if (!isActive || events.length === 0) return;
+			setSelectedIndex((prev) => {
+				const next = prev + delta;
+				if (next < 0) return 0;
+				if (next > events.length - 1) return events.length - 1;
+				return next;
+			});
+		},
+		[events.length, isActive],
+	);
 
-		if (key.name === "down") {
-			key.preventDefault?.();
-			setSelectedIndex((prev) => Math.min(prev + 1, events.length - 1));
-		} else if (key.name === "up") {
-			key.preventDefault?.();
-			setSelectedIndex((prev) => Math.max(prev - 1, 0));
-		} else if (key.name === "e") {
-			const event = events[clampedIndex];
-			if (event) {
-				onEdit(event);
-			}
-		} else if (key.name === "d") {
-			const event = events[clampedIndex];
-			if (event) {
-				Effect.runSync(deleteEvent(event.id));
-				if (selectedIndex >= events.length - 1 && selectedIndex > 0) {
-					setSelectedIndex(selectedIndex - 1);
-				}
-				forceUpdate();
-				onEventsChanged();
+	const editSelection = useCallback(() => {
+		if (!isActive) return;
+		const event = events[clampedIndex];
+		if (event) {
+			onEdit(event);
+		}
+	}, [clampedIndex, events, isActive, onEdit]);
+
+	const deleteSelection = useCallback(() => {
+		if (!isActive) return;
+		const event = events[clampedIndex];
+		if (event) {
+			Effect.runSync(deleteEvent(event.id));
+			if (selectedIndex >= events.length - 1 && selectedIndex > 0) {
+				setSelectedIndex(selectedIndex - 1);
 			}
 		}
-	});
+	}, [clampedIndex, events, isActive, selectedIndex]);
+
+	const agendaHandlers = useMemo(
+		() => ({ moveSelection, editSelection, deleteSelection }),
+		[moveSelection, editSelection, deleteSelection],
+	);
+
+	useEffect(() => {
+		setAgendaCommandHandlers(agendaHandlers);
+		return () => setAgendaCommandHandlers(null);
+	}, [agendaHandlers]);
+
+	const ctx = getCommandContext();
+	const bindings = getActiveBindings(ctx, { layerIds: ["agenda"] });
+	const keyMap = buildHelpKeyMap(bindings);
+	const normalizeKey = (key: string) => {
+		if (key === "Up") return "↑";
+		if (key === "Down") return "↓";
+		return key;
+	};
+	const buildKeys = (commandIds: string[], order?: string[]) =>
+		joinHelpKeys(keyMap, commandIds, { order, normalizeKey });
+	const helpParts: string[] = [];
+	const navKeys = buildKeys(["agenda.moveUp", "agenda.moveDown"], ["↑", "↓"]);
+	if (navKeys) {
+		helpParts.push(`${navKeys} Navigate`);
+	}
+	const editKeys = buildKeys(["agenda.edit"]);
+	if (editKeys) {
+		helpParts.push(`${editKeys} Edit`);
+	}
+	const deleteKeys = buildKeys(["agenda.delete"]);
+	if (deleteKeys) {
+		helpParts.push(`${deleteKeys} Delete`);
+	}
+	const toggleKeys = buildKeys(["calendar.toggleAgenda"]);
+	if (toggleKeys) {
+		helpParts.push(`${toggleKeys} Toggle`);
+	}
+	const helpText = helpParts.length > 0 ? helpParts.join(" | ") : "";
 
 	return (
 		<box
@@ -170,9 +216,7 @@ export function AgendaSideView({
 				)}
 			</box>
 
-			<text fg={THEME.foregroundDim}>
-				↑/↓ Navigate | E Edit | D Delete | V Toggle
-			</text>
+			{helpText && <text fg={THEME.foregroundDim}>{helpText}</text>}
 		</box>
 	);
 }

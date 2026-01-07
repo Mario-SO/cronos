@@ -1,3 +1,9 @@
+import {
+	formatHelpText,
+	getActiveBindings,
+	getCommandContext,
+	setGoToDateCommandHandlers,
+} from "@core/commands";
 import { useModalDimensions } from "@hooks/useModalDimensions";
 import { THEME } from "@lib/colors";
 import {
@@ -5,23 +11,17 @@ import {
 	isValidDate,
 	parseMonthAbbrev,
 } from "@lib/dateUtils";
-import { useKeyboard } from "@opentui/react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ModalFrame } from "./ModalFrame";
 
 interface GoToDateModalProps {
 	currentDate: Date;
-	onClose: () => void;
 	onGo: (date: Date) => void;
 }
 
 type FocusedField = "day" | "month" | "year";
 
-export function GoToDateModal({
-	currentDate,
-	onClose,
-	onGo,
-}: GoToDateModalProps) {
+export function GoToDateModal({ currentDate, onGo }: GoToDateModalProps) {
 	const { width: modalWidth, height: modalHeight } = useModalDimensions({
 		minWidth: 30,
 		widthPercent: 0.5,
@@ -38,33 +38,23 @@ export function GoToDateModal({
 	const [focusedField, setFocusedField] = useState<FocusedField>("day");
 	const [error, setError] = useState<string | null>(null);
 
-	useKeyboard((key) => {
-		if (key.name === "escape") {
-			onClose();
-			return;
-		}
+	const focusNextField = useCallback(() => {
+		setFocusedField((prev) => {
+			if (prev === "day") return "month";
+			if (prev === "month") return "year";
+			return "day";
+		});
+	}, []);
 
-		if (key.name === "tab") {
-			key.preventDefault();
-			if (key.shift) {
-				// Shift+Tab: go backwards
-				setFocusedField((prev) => {
-					if (prev === "day") return "year";
-					if (prev === "month") return "day";
-					return "month";
-				});
-			} else {
-				// Tab: go forward
-				setFocusedField((prev) => {
-					if (prev === "day") return "month";
-					if (prev === "month") return "year";
-					return "day";
-				});
-			}
-		}
-	});
+	const focusPrevField = useCallback(() => {
+		setFocusedField((prev) => {
+			if (prev === "day") return "year";
+			if (prev === "month") return "day";
+			return "month";
+		});
+	}, []);
 
-	const handleSubmit = () => {
+	const handleSubmit = useCallback(() => {
 		setError(null);
 
 		// Parse day
@@ -98,7 +88,24 @@ export function GoToDateModal({
 		}
 
 		onGo(new Date(year, month, day));
-	};
+	}, [currentDate, dayValue, monthValue, onGo, yearValue]);
+
+	const submit = useCallback(() => {
+		handleSubmit();
+	}, [handleSubmit]);
+
+	useEffect(() => {
+		setGoToDateCommandHandlers({
+			focusNextField,
+			focusPrevField,
+			submit,
+		});
+		return () => setGoToDateCommandHandlers(null);
+	}, [focusNextField, focusPrevField, submit]);
+
+	const helpText = formatHelpText(
+		getActiveBindings(getCommandContext(), { layerIds: ["modal:goto"] }),
+	);
 
 	return (
 		<ModalFrame width={modalWidth} height={modalHeight}>
@@ -125,7 +132,6 @@ export function GoToDateModal({
 							value={dayValue}
 							focused={focusedField === "day"}
 							onInput={setDayValue}
-							onSubmit={handleSubmit}
 						/>
 					</box>
 				</box>
@@ -146,7 +152,6 @@ export function GoToDateModal({
 							value={monthValue}
 							focused={focusedField === "month"}
 							onInput={setMonthValue}
-							onSubmit={handleSubmit}
 						/>
 					</box>
 				</box>
@@ -167,7 +172,6 @@ export function GoToDateModal({
 							value={yearValue}
 							focused={focusedField === "year"}
 							onInput={setYearValue}
-							onSubmit={handleSubmit}
 						/>
 					</box>
 				</box>
@@ -181,9 +185,7 @@ export function GoToDateModal({
 			)}
 
 			{/* Help */}
-			<text fg={THEME.foregroundDim}>
-				Tab to switch fields | Enter to go | Esc to cancel
-			</text>
+			{helpText && <text fg={THEME.foregroundDim}>{helpText}</text>}
 		</ModalFrame>
 	);
 }

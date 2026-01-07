@@ -1,25 +1,28 @@
+import {
+	formatHelpText,
+	getActiveBindings,
+	getCommandContext,
+	setAddModalCommandHandlers,
+} from "@core/commands";
 import type { CalendarEvent } from "@core/types";
 import { useModalDimensions } from "@hooks/useModalDimensions";
 import { getColorHex, THEME } from "@lib/colors";
 import { formatDateKey, formatTimeRange } from "@lib/dateUtils";
 import { parseEventInput, reconstructEventInput } from "@lib/eventParser";
-import { useKeyboard } from "@opentui/react";
 import { addEvent, updateEvent } from "@state/events";
 import { Effect } from "effect";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ModalFrame } from "./ModalFrame";
 
 interface AddEventModalProps {
 	selectedDate: Date;
 	editingEvent?: CalendarEvent;
-	onClose: () => void;
 	onSave: () => void;
 }
 
 export function AddEventModal({
 	selectedDate,
 	editingEvent,
-	onClose,
 	onSave,
 }: AddEventModalProps) {
 	const { width: modalWidth, height: modalHeight } = useModalDimensions({
@@ -36,43 +39,53 @@ export function AddEventModal({
 	const parsed = parseEventInput(inputValue);
 	const dateKey = formatDateKey(selectedDate);
 
-	useKeyboard((key) => {
-		if (key.name === "escape") {
-			onClose();
-		}
-	});
+	const handleSubmit = useCallback(
+		(value: string) => {
+			const finalParsed = parseEventInput(value);
+			if (!finalParsed.title.trim()) {
+				return; // Don't save empty events
+			}
 
-	const handleSubmit = (value: string) => {
-		const finalParsed = parseEventInput(value);
-		if (!finalParsed.title.trim()) {
-			return; // Don't save empty events
-		}
+			if (editingEvent) {
+				// Update existing event
+				Effect.runSync(
+					updateEvent(editingEvent.id, {
+						title: finalParsed.title,
+						startTime: finalParsed.startTime,
+						endTime: finalParsed.endTime,
+						color: finalParsed.color,
+					}),
+				);
+			} else {
+				// Create new event
+				Effect.runSync(
+					addEvent(
+						dateKey,
+						finalParsed.title,
+						finalParsed.startTime,
+						finalParsed.endTime,
+						finalParsed.color,
+					),
+				);
+			}
 
-		if (editingEvent) {
-			// Update existing event
-			Effect.runSync(
-				updateEvent(editingEvent.id, {
-					title: finalParsed.title,
-					startTime: finalParsed.startTime,
-					endTime: finalParsed.endTime,
-					color: finalParsed.color,
-				}),
-			);
-		} else {
-			// Create new event
-			Effect.runSync(
-				addEvent(
-					dateKey,
-					finalParsed.title,
-					finalParsed.startTime,
-					finalParsed.endTime,
-					finalParsed.color,
-				),
-			);
-		}
+			onSave();
+		},
+		[dateKey, editingEvent, onSave],
+	);
 
-		onSave();
-	};
+	const submit = useCallback(() => {
+		handleSubmit(inputValue);
+	}, [handleSubmit, inputValue]);
+
+	useEffect(() => {
+		setAddModalCommandHandlers({ submit });
+		return () => setAddModalCommandHandlers(null);
+	}, [submit]);
+
+	const helpText = formatHelpText(
+		getActiveBindings(getCommandContext(), { layerIds: ["modal:add"] }),
+	);
 
 	const formattedDate = selectedDate.toLocaleDateString("en-US", {
 		weekday: "short",
@@ -102,7 +115,6 @@ export function AddEventModal({
 					value={inputValue}
 					focused
 					onInput={setInputValue}
-					onSubmit={handleSubmit}
 				/>
 			</box>
 
@@ -127,9 +139,11 @@ export function AddEventModal({
 			</box>
 
 			{/* Help */}
-			<box style={{ marginTop: 1 }}>
-				<text fg={THEME.foregroundDim}>Enter to save | Esc to cancel</text>
-			</box>
+			{helpText && (
+				<box style={{ marginTop: 1 }}>
+					<text fg={THEME.foregroundDim}>{helpText}</text>
+				</box>
+			)}
 		</ModalFrame>
 	);
 }

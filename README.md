@@ -24,51 +24,38 @@ bun dev
 | `a` | Add event |
 | `v` | Toggle agenda side view |
 | `g` | Go to date |
+| `s` | Search events |
 | `q` | Quit |
 
 ## Adding a Shortcut
 
 This is the full flow for adding a new shortcut and its behavior end-to-end.
 
-1. **Choose scope + behavior**
-   - Decide where it should work: `root`, or a modal scope like `add`, `goto`, `search`.
-   - Check `Scope` in `src/core/types.ts` to confirm the scope name.
-2. **Add the command id**
-   - Extend the `Command` union in `src/core/types.ts`.
-   - Keep naming consistent with the existing prefixes: `calendar.*`, `modal.*`, `app.*`.
-3. **Implement the behavior**
-   - Add a handler in `src/core/commands/` (`calendar.ts`, `modal.ts`, or `app.ts`).
-   - If the command mutates state, reuse existing state helpers in `src/state/` instead of duplicating logic.
-4. **Register the handler**
-   - Add the new command to the `commandHandlers` map in `src/core/commands/index.ts`.
-5. **Register the shortcut**
-   - Add the key binding in `src/core/keyboard/registry.ts`.
-   - Include `scope` if it is not root, and write a short `description` for help text.
-6. **Update help text**
-   - If the shortcut is modal-specific, update the help hint line in the relevant modal component.
-   - If it is global, update the Keyboard Shortcuts table in this README.
+1. **Add the command definition**
+   - Add a new entry in the relevant module under `src/core/commands/`.
+   - Include `id`, `title`, `keys`, `layers`, and `run`.
+2. **Pick a layer**
+   - Use an existing layer (`global`, `agenda`, `modal:add`, `modal:goto`, `modal:search`) in `layers`.
+   - If you need a new context, add a new layer in `src/core/commands/keymap.ts`.
+3. **Wire UI handlers (if needed)**
+   - For view-local behavior, register handlers in the component via `set...CommandHandlers`.
+4. **Update docs**
+   - Add global bindings to the Keyboard Shortcuts table in this README.
 
 Example (add `n` to jump to next year):
 
 ```ts
-// 1) src/core/types.ts
-export type Command =
-  | ...
-  | "calendar.nextYear";
-
-// 2) src/core/commands/calendar.ts
-export function nextYear() {
-  // implementation (likely uses @state/calendar helpers)
-}
-
-// 3) src/core/commands/index.ts
-const commandHandlers: Record<Command, () => void> = {
+// src/core/commands/calendar.ts
+export const calendarCommands = [
   // ...
-  "calendar.nextYear": calendar.nextYear,
-};
-
-// 4) src/core/keyboard/registry.ts
-{ key: "n", command: "calendar.nextYear", description: "Next year" },
+  {
+    id: "calendar.nextYear",
+    title: "Next year",
+    keys: ["n"],
+    layers: ["global"],
+    run: () => goToNextYear,
+  },
+];
 ```
 
 ## Roadmap

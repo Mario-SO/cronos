@@ -1,17 +1,21 @@
+import {
+	formatHelpText,
+	getActiveBindings,
+	getCommandContext,
+	setSearchModalCommandHandlers,
+} from "@core/commands";
 import type { CalendarEvent } from "@core/types";
 import { useModalDimensions } from "@hooks/useModalDimensions";
 import { getColorHex, THEME } from "@lib/colors";
 import { SEARCH_MODAL_TITLE_LENGTH } from "@lib/constants";
 import { formatTimeRange, parseDateKey } from "@lib/dateUtils";
 import type { ScrollBoxRenderable } from "@opentui/core";
-import { useKeyboard } from "@opentui/react";
 import { deleteEvent, getAllEvents } from "@state/events";
 import { Effect } from "effect";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ModalFrame } from "./ModalFrame";
 
 interface SearchEventsModalProps {
-	onClose: () => void;
 	onGoToDate: (date: Date) => void;
 	onEdit: (event: CalendarEvent) => void;
 }
@@ -63,7 +67,6 @@ function formatEventDate(dateKey: string): string {
 }
 
 export function SearchEventsModal({
-	onClose,
 	onGoToDate,
 	onEdit,
 }: SearchEventsModalProps) {
@@ -133,43 +136,57 @@ export function SearchEventsModal({
 		}
 	}, [clampedIndex, filteredEvents.length, visibleEvents]);
 
-	useKeyboard((key) => {
-		// Don't allow 's' key to close the modal
-		if (key.name === "escape") {
-			onClose();
-			return;
-		}
+	const moveSelection = useCallback(
+		(delta: number) => {
+			if (filteredEvents.length === 0) return;
+			setSelectedIndex((prev) => {
+				const next = prev + delta;
+				if (next < 0) return 0;
+				if (next > filteredEvents.length - 1) return filteredEvents.length - 1;
+				return next;
+			});
+		},
+		[filteredEvents.length],
+	);
 
-		if (filteredEvents.length === 0) return;
+	const goToSelection = useCallback(() => {
+		const event = filteredEvents[clampedIndex];
+		if (!event) return;
+		const date = parseDateKey(event.date);
+		onGoToDate(date);
+	}, [clampedIndex, filteredEvents, onGoToDate]);
 
-		if (key.name === "down") {
-			key.preventDefault();
-			setSelectedIndex((prev) => Math.min(prev + 1, filteredEvents.length - 1));
-		} else if (key.name === "up") {
-			key.preventDefault();
-			setSelectedIndex((prev) => Math.max(prev - 1, 0));
-		} else if (key.name === "return") {
-			const event = filteredEvents[clampedIndex];
-			if (event) {
-				const date = parseDateKey(event.date);
-				onGoToDate(date);
-			}
-		} else if (key.ctrl && key.name === "e") {
-			const event = filteredEvents[clampedIndex];
-			if (event) {
-				onEdit(event);
-			}
-		} else if (key.ctrl && key.name === "d") {
-			const event = filteredEvents[clampedIndex];
-			if (event) {
-				Effect.runSync(deleteEvent(event.id));
-				if (selectedIndex >= filteredEvents.length - 1 && selectedIndex > 0) {
-					setSelectedIndex(selectedIndex - 1);
-				}
-				setAllEvents(Effect.runSync(getAllEvents));
-			}
+	const editSelection = useCallback(() => {
+		const event = filteredEvents[clampedIndex];
+		if (event) {
+			onEdit(event);
 		}
-	});
+	}, [clampedIndex, filteredEvents, onEdit]);
+
+	const deleteSelection = useCallback(() => {
+		const event = filteredEvents[clampedIndex];
+		if (!event) return;
+
+		Effect.runSync(deleteEvent(event.id));
+		if (selectedIndex >= filteredEvents.length - 1 && selectedIndex > 0) {
+			setSelectedIndex(selectedIndex - 1);
+		}
+		setAllEvents(Effect.runSync(getAllEvents));
+	}, [clampedIndex, filteredEvents, selectedIndex]);
+
+	const searchHandlers = useMemo(
+		() => ({ moveSelection, goToSelection, editSelection, deleteSelection }),
+		[moveSelection, goToSelection, editSelection, deleteSelection],
+	);
+
+	useEffect(() => {
+		setSearchModalCommandHandlers(searchHandlers);
+		return () => setSearchModalCommandHandlers(null);
+	}, [searchHandlers]);
+
+	const helpText = formatHelpText(
+		getActiveBindings(getCommandContext(), { layerIds: ["modal:search"] }),
+	);
 
 	return (
 		<ModalFrame width={modalWidth} height={modalHeight}>
@@ -264,12 +281,11 @@ export function SearchEventsModal({
 			</box>
 
 			{/* Help */}
-			<box style={{ marginTop: 1 }}>
-				<text fg={THEME.foregroundDim}>
-					↑/↓ Navigate | Enter Go to date | CTRL+E Edit | CTRL+D Delete | Esc
-					Close
-				</text>
-			</box>
+			{helpText && (
+				<box style={{ marginTop: 1 }}>
+					<text fg={THEME.foregroundDim}>{helpText}</text>
+				</box>
+			)}
 		</ModalFrame>
 	);
 }

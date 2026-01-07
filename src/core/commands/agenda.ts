@@ -1,0 +1,40 @@
+import type { CommandDefinition } from "./types";
+
+export const agendaCommands = [
+	{
+		id: "agenda.moveDown",
+		title: "Next event",
+		keys: [{ key: "down", preventDefault: true }],
+		layers: ["agenda"],
+		run: (ctx) => {
+			ctx.agenda?.moveSelection(1);
+		},
+	},
+	{
+		id: "agenda.moveUp",
+		title: "Previous event",
+		keys: [{ key: "up", preventDefault: true }],
+		layers: ["agenda"],
+		run: (ctx) => {
+			ctx.agenda?.moveSelection(-1);
+		},
+	},
+	{
+		id: "agenda.edit",
+		title: "Edit",
+		keys: ["e"],
+		layers: ["agenda"],
+		run: (ctx) => {
+			ctx.agenda?.editSelection();
+		},
+	},
+	{
+		id: "agenda.delete",
+		title: "Delete",
+		keys: ["d"],
+		layers: ["agenda"],
+		run: (ctx) => {
+			ctx.agenda?.deleteSelection();
+		},
+	},
+] as const satisfies readonly CommandDefinition[];

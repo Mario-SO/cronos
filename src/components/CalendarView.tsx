@@ -1,3 +1,9 @@
+import {
+	buildHelpKeyMap,
+	getActiveBindings,
+	getCommandContext,
+	joinHelpKeys,
+} from "@core/commands";
 import type { CalendarState } from "@core/types";
 import { useTerminalSize } from "@hooks/useTerminalSize";
 import { THEME } from "@lib/colors";
@@ -78,6 +84,45 @@ export function CalendarView({
 	}
 
 	const monthYearHeader = `${getMonthName(month)} ${year}`;
+	const ctx = getCommandContext();
+	const bindings = getActiveBindings(ctx, { layerIds: ["global"] });
+	const keyMap = buildHelpKeyMap(bindings);
+	const buildKeys = (commandIds: string[], order?: string[]) =>
+		joinHelpKeys(keyMap, commandIds, { order });
+	const helpParts: string[] = [];
+	const movementKeys = buildKeys(
+		[
+			"calendar.prevDay",
+			"calendar.nextWeek",
+			"calendar.prevWeek",
+			"calendar.nextDay",
+		],
+		["H", "J", "K", "L"],
+	);
+	if (movementKeys) {
+		helpParts.push(`${movementKeys} Day movement`);
+	}
+	const monthKeys = buildKeys(
+		["calendar.prevMonth", "calendar.nextMonth"],
+		["[", "]"],
+	);
+	if (monthKeys) {
+		helpParts.push(`${monthKeys} Prev/Next Month`);
+	}
+	const singleBindings = [
+		{ id: "calendar.today", label: "Today" },
+		{ id: "modal.openAdd", label: "Add" },
+		{ id: "calendar.toggleAgenda", label: "Agenda" },
+		{ id: "modal.openSearch", label: "Search" },
+		{ id: "modal.openGoto", label: "Go to date" },
+	];
+	for (const binding of singleBindings) {
+		const key = buildKeys([binding.id]);
+		if (key) {
+			helpParts.push(`${key} ${binding.label}`);
+		}
+	}
+	const helpText = helpParts.length > 0 ? helpParts.join(" | ") : "";
 
 	return (
 		<box style={{ flexDirection: "column", alignItems: "center" }}>
@@ -136,12 +181,11 @@ export function CalendarView({
 			})}
 
 			{/* Help text */}
-			<box style={{ marginTop: 1 }}>
-				<text fg={THEME.foregroundDim}>
-					[/] Month | H/J/K/L Navigate | T Today | A Add | V Agenda | S Search |
-					G Go to date
-				</text>
-			</box>
+			{helpText && (
+				<box style={{ marginTop: 1 }}>
+					<text fg={THEME.foregroundDim}>{helpText}</text>
+				</box>
+			)}
 		</box>
 	);
 }

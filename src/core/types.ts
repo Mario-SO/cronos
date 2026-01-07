@@ -34,39 +34,3 @@ export interface ParsedEventInput {
 	endTime?: number;
 	color: ColorName;
 }
-
-// Keyboard shortcut system types
-
-/** Scope defines when a shortcut is active */
-export type Scope = "root" | "add" | "goto" | "search";
-
-/** All available command identifiers */
-export type Command =
-	// Calendar navigation
-	| "calendar.prevMonth"
-	| "calendar.nextMonth"
-	| "calendar.prevDay"
-	| "calendar.nextDay"
-	| "calendar.prevWeek"
-	| "calendar.nextWeek"
-	| "calendar.today"
-	| "calendar.toggleAgenda"
-	// Modal management
-	| "modal.openAdd"
-	| "modal.openGoto"
-	| "modal.openSearch"
-	| "modal.close"
-	// App
-	| "app.quit";
-
-/** Shortcut definition linking a key to a command */
-export interface Shortcut {
-	/** Key name (e.g., "a", "left", "escape") */
-	key: string;
-	/** Command to execute */
-	command: Command;
-	/** Scope when shortcut is active (defaults to "root") */
-	scope?: Scope;
-	/** Human-readable description for help text */
-	description: string;
-}
