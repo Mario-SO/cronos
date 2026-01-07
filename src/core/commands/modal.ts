@@ -5,10 +5,6 @@ export function openAdd() {
 	Effect.runSync(openModal("add"));
 }
 
-export function openView() {
-	Effect.runSync(openModal("view"));
-}
-
 export function openGoto() {
 	Effect.runSync(openModal("goto"));
 }

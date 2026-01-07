@@ -22,7 +22,7 @@ bun dev
 | `k` / `j` | Previous / Next week |
 | `t` | Jump to today |
 | `a` | Add event |
-| `v` | View events |
+| `v` | Toggle agenda side view |
 | `g` | Go to date |
 | `q` | Quit |
 
@@ -31,7 +31,7 @@ bun dev
 This is the full flow for adding a new shortcut and its behavior end-to-end.
 
 1. **Choose scope + behavior**
-   - Decide where it should work: `root`, or a modal scope like `add`, `view`, `goto`, `search`.
+   - Decide where it should work: `root`, or a modal scope like `add`, `goto`, `search`.
    - Check `Scope` in `src/core/types.ts` to confirm the scope name.
 2. **Add the command id**
    - Extend the `Command` union in `src/core/types.ts`.
@@ -76,10 +76,10 @@ const commandHandlers: Record<Command, () => void> = {
 - [ ] Google Calendar sync
 - [ ] Yearly view
 - [ ] Multiple day events
-- [ ] Agenda side view
+- [ ] Recurring events
+- [x] Agenda side view
 - [ ] iCal export/import
 - [x] Persistent storage
 - [x] Search through event list
 - [ ] Settings
-- [ ] Recurring events
 - [ ] cli support

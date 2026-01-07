@@ -14,10 +14,18 @@ import { DayCell } from "./DayCell";
 
 interface CalendarViewProps {
 	state: CalendarState;
+	availableWidth?: number;
+	availableHeight?: number;
 }
 
-export function CalendarView({ state }: CalendarViewProps) {
+export function CalendarView({
+	state,
+	availableWidth,
+	availableHeight,
+}: CalendarViewProps) {
 	const terminalSize = useTerminalSize();
+	const layoutWidth = availableWidth ?? terminalSize.width;
+	const layoutHeight = availableHeight ?? terminalSize.height;
 	const { displayedMonth, selectedDate } = state;
 	const year = displayedMonth.getFullYear();
 	const month = displayedMonth.getMonth();
@@ -25,9 +33,9 @@ export function CalendarView({ state }: CalendarViewProps) {
 
 	// Calculate responsive cell dimensions
 	// Reserve space: 1 line for header, 1 line for weekday headers, 1 line for help text
-	const availableHeight = terminalSize.height - 3;
-	const cellHeight = Math.max(3, Math.floor(availableHeight / 6));
-	const cellWidth = Math.max(8, Math.floor((terminalSize.width - 2) / 7)); // -2 for padding
+	const gridHeight = layoutHeight - 3;
+	const cellHeight = Math.max(3, Math.floor(gridHeight / 6));
+	const cellWidth = Math.max(8, Math.floor((layoutWidth - 2) / 7)); // -2 for padding
 
 	const daysInMonth = getDaysInMonth(year, month);
 	const firstWeekday = getWeekdayOfFirst(year, month);
@@ -130,8 +138,8 @@ export function CalendarView({ state }: CalendarViewProps) {
 			{/* Help text */}
 			<box style={{ marginTop: 1 }}>
 				<text fg={THEME.foregroundDim}>
-					[/] Month | H/J/K/L Navigate | T Today | A Add | V View | S Search | G
-					Go to date
+					[/] Month | H/J/K/L Navigate | T Today | A Add | V Agenda | S Search |
+					G Go to date
 				</text>
 			</box>
 		</box>

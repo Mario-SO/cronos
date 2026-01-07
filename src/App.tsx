@@ -1,11 +1,13 @@
 import { AddEventModal } from "@components/AddEventModal";
+import { AgendaSideView } from "@components/AgendaSideView";
 import { CalendarView } from "@components/CalendarView";
 import { GoToDateModal } from "@components/GoToDateModal";
 import { SearchEventsModal } from "@components/SearchEventsModal";
-import { ViewEventsModal } from "@components/ViewEventsModal";
 import { useShortcutHandler } from "@core/keyboard";
 import type { CalendarEvent, Scope } from "@core/types";
+import { useTerminalSize } from "@hooks/useTerminalSize";
 import { THEME } from "@lib/colors";
+import { useAgendaState } from "@state/agenda";
 import { calendarStateRef, goToDate } from "@state/calendar";
 import { closeModal, openEditModal, useModalState } from "@state/modal";
 import { Effect, Ref } from "effect";
@@ -19,6 +21,8 @@ export function App() {
 	// Read state synchronously
 	const calendarState = Effect.runSync(Ref.get(calendarStateRef));
 	const modalState = useModalState();
+	const agendaState = useAgendaState();
+	const terminalSize = useTerminalSize();
 
 	// Determine current scope for shortcut handling
 	const scope: Scope = modalState.type === "none" ? "root" : modalState.type;
@@ -56,17 +60,53 @@ export function App() {
 		[triggerUpdate],
 	);
 
+	const minCalendarWidth = 58;
+	const minAgendaWidth = 18;
+	const agendaGutter = 2;
+	const targetAgendaWidth = Math.min(
+		52,
+		Math.max(24, Math.floor(terminalSize.width * 0.32)),
+	);
+	const maxAgendaWidth = terminalSize.width - minCalendarWidth - agendaGutter;
+	const agendaWidth = Math.min(targetAgendaWidth, maxAgendaWidth);
+	const agendaHeight = Math.max(10, terminalSize.height - 2);
+	const agendaVisible = agendaState.isOpen && agendaWidth >= minAgendaWidth;
+	const calendarWidth = agendaVisible
+		? terminalSize.width - agendaWidth - agendaGutter
+		: terminalSize.width;
+
 	return (
 		<box
 			style={{
 				flexGrow: 1,
 				backgroundColor: THEME.background,
-				alignItems: "center",
-				justifyContent: "center",
+				flexDirection: "row",
+				alignItems: "stretch",
 			}}
 		>
-			{/* Calendar View */}
-			<CalendarView state={calendarState} />
+			<box
+				style={{ flexGrow: 1, alignItems: "center", justifyContent: "center" }}
+			>
+				{/* Calendar View */}
+				<CalendarView
+					state={calendarState}
+					availableWidth={calendarWidth}
+					availableHeight={terminalSize.height}
+				/>
+			</box>
+
+			{agendaVisible && (
+				<box style={{ marginLeft: agendaGutter, justifyContent: "center" }}>
+					<AgendaSideView
+						selectedDate={calendarState.selectedDate}
+						width={agendaWidth}
+						height={agendaHeight}
+						isActive={modalState.type === "none"}
+						onEdit={handleEditEvent}
+						onEventsChanged={triggerUpdate}
+					/>
+				</box>
+			)}
 
 			{/* Modals */}
 			{modalState.type === "add" && (
@@ -75,14 +115,6 @@ export function App() {
 					editingEvent={modalState.editingEvent}
 					onClose={handleCloseModal}
 					onSave={handleSaveEvent}
-				/>
-			)}
-
-			{modalState.type === "view" && (
-				<ViewEventsModal
-					selectedDate={calendarState.selectedDate}
-					onClose={handleCloseModal}
-					onEdit={handleEditEvent}
 				/>
 			)}
 

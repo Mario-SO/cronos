@@ -18,9 +18,9 @@ export const shortcuts: Shortcut[] = [
 	{ key: "j", command: "calendar.nextWeek", description: "Next week" },
 	{ key: "t", command: "calendar.today", description: "Jump to today" },
 
-	// Modal openers (root scope)
+	// Root actions
 	{ key: "a", command: "modal.openAdd", description: "Add event" },
-	{ key: "v", command: "modal.openView", description: "View events" },
+	{ key: "v", command: "calendar.toggleAgenda", description: "Toggle agenda" },
 	{ key: "g", command: "modal.openGoto", description: "Go to date" },
 	{ key: "s", command: "modal.openSearch", description: "Search events" },
 
