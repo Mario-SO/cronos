@@ -65,7 +65,7 @@ export const calendarCommands = [
 - [ ] Settings modal on ','
     - [x] Week start day
     - [x] Notification options
-    - [ ] Themes
+    - [x] Themes
     - [ ] Google Calendar sync
     - [ ] iCal export/import
 - [ ] Notifications for upcoming events
