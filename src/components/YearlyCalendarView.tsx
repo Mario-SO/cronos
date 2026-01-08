@@ -198,8 +198,7 @@ export function YearlyCalendarView({
 									? date.toLocaleString("en-US", { month: "short" })
 									: "";
 								const weekdayIndex = (date.getDay() + 6) % 7;
-								const weekdayLabel =
-									WEEKDAY_COMPACT_LABELS[weekdayIndex] ?? "";
+								const weekdayLabel = WEEKDAY_COMPACT_LABELS[weekdayIndex] ?? "";
 								const headerLabel = monthLabel || weekdayLabel;
 								const dayText = String(date.getDate()).padStart(2, "0");
 								const bgColor = isSelected ? THEME.selected : undefined;
@@ -241,7 +240,10 @@ export function YearlyCalendarView({
 											<>
 												<box style={{ flexDirection: "row" }}>
 													<text fg={dayFgColor}>{dayText}</text>
-													<text fg={THEME.foregroundDim} style={{ marginLeft: 1 }}>
+													<text
+														fg={THEME.foregroundDim}
+														style={{ marginLeft: 1 }}
+													>
 														{headerLabel}
 													</text>
 												</box>
