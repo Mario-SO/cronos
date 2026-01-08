@@ -79,7 +79,9 @@ export function SettingsModal() {
 		draftNotificationMinutes,
 		10,
 	);
-	const normalizedNotificationMinutes = Number.isFinite(parsedNotificationMinutes)
+	const normalizedNotificationMinutes = Number.isFinite(
+		parsedNotificationMinutes,
+	)
 		? parsedNotificationMinutes
 		: settings.notificationLeadMinutes;
 	const isDirty =
@@ -247,6 +249,7 @@ export function SettingsModal() {
 		draftWeekStart,
 		focusArea,
 		normalizedNotificationMinutes,
+		draftTheme,
 	]);
 
 	useEffect(() => {
@@ -370,9 +373,7 @@ export function SettingsModal() {
 											<box
 												key={option.id}
 												style={{
-													backgroundColor: isFocused
-														? ui.selection
-														: undefined,
+													backgroundColor: isFocused ? ui.selection : undefined,
 												}}
 											>
 												<text fg={fg}>
@@ -385,9 +386,7 @@ export function SettingsModal() {
 								</box>
 							</box>
 
-							<text fg={ui.foregroundDim}>
-								Saved: {appliedWeekStartLabel}
-							</text>
+							<text fg={ui.foregroundDim}>Saved: {appliedWeekStartLabel}</text>
 						</>
 					) : activeSection === "notifications" ? (
 						<>
@@ -398,16 +397,13 @@ export function SettingsModal() {
 								].map((option) => {
 									const isSelected = draftNotificationsEnabled === option.value;
 									const isFocused =
-										focusArea === "fields" &&
-										notificationsField === option.id;
+										focusArea === "fields" && notificationsField === option.id;
 									const fg = isSelected ? ui.selected : ui.foreground;
 									return (
 										<box
 											key={option.label}
 											style={{
-												backgroundColor: isFocused
-													? ui.selection
-													: undefined,
+												backgroundColor: isFocused ? ui.selection : undefined,
 											}}
 										>
 											<text fg={fg}>
@@ -437,9 +433,7 @@ export function SettingsModal() {
 									<input
 										value={draftNotificationMinutes}
 										placeholder="10"
-										focused={
-											focusArea === "fields" && notificationsField === 2
-										}
+										focused={focusArea === "fields" && notificationsField === 2}
 										onInput={handleNotificationMinutesInput}
 									/>
 								</box>
@@ -449,30 +443,26 @@ export function SettingsModal() {
 							</box>
 						</>
 					) : (
-						<>
-							<box style={{ flexDirection: "column", marginBottom: 1 }}>
-								{themeOptions.map((option) => {
-									const isSelected = option.id === draftTheme;
-									const fg = isSelected ? ui.selected : ui.foreground;
-									const isFocused = focusArea === "fields" && isSelected;
-									return (
-										<box
-											key={option.id}
-											style={{
-												backgroundColor: isFocused
-													? ui.selection
-													: undefined,
-											}}
-										>
-											<text fg={fg}>
-												{isFocused ? "> " : "  "}
-												{isSelected ? "(x)" : "( )"} {option.label}
-											</text>
-										</box>
-									);
-								})}
-							</box>
-						</>
+						<box style={{ flexDirection: "column", marginBottom: 1 }}>
+							{themeOptions.map((option) => {
+								const isSelected = option.id === draftTheme;
+								const fg = isSelected ? ui.selected : ui.foreground;
+								const isFocused = focusArea === "fields" && isSelected;
+								return (
+									<box
+										key={option.id}
+										style={{
+											backgroundColor: isFocused ? ui.selection : undefined,
+										}}
+									>
+										<text fg={fg}>
+											{isFocused ? "> " : "  "}
+											{isSelected ? "(x)" : "( )"} {option.label}
+										</text>
+									</box>
+								);
+							})}
+						</box>
 					)}
 				</box>
 

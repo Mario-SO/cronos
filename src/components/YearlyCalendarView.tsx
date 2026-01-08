@@ -251,10 +251,7 @@ export function YearlyCalendarView({
 											<>
 												<box style={{ flexDirection: "row" }}>
 													<text fg={dayFgColor}>{dayText}</text>
-													<text
-														fg={ui.foregroundDim}
-														style={{ marginLeft: 1 }}
-													>
+													<text fg={ui.foregroundDim} style={{ marginLeft: 1 }}>
 														{headerLabel}
 													</text>
 												</box>

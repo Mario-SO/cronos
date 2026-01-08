@@ -123,8 +123,7 @@ export function GoToDateModal({ currentDate, onGo }: GoToDateModalProps) {
 					<box
 						style={{
 							border: true,
-							borderColor:
-								focusedField === "day" ? ui.selected : ui.border,
+							borderColor: focusedField === "day" ? ui.selected : ui.border,
 							width: 6,
 							height: 3,
 						}}
@@ -143,8 +142,7 @@ export function GoToDateModal({ currentDate, onGo }: GoToDateModalProps) {
 					<box
 						style={{
 							border: true,
-							borderColor:
-								focusedField === "month" ? ui.selected : ui.border,
+							borderColor: focusedField === "month" ? ui.selected : ui.border,
 							width: 8,
 							height: 3,
 						}}
@@ -163,8 +161,7 @@ export function GoToDateModal({ currentDate, onGo }: GoToDateModalProps) {
 					<box
 						style={{
 							border: true,
-							borderColor:
-								focusedField === "year" ? ui.selected : ui.border,
+							borderColor: focusedField === "year" ? ui.selected : ui.border,
 							width: 8,
 							height: 3,
 						}}

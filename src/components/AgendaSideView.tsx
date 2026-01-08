@@ -183,9 +183,7 @@ export function AgendaSideView({
 									key={event.id}
 									style={{
 										flexDirection: "row",
-										backgroundColor: isSelected
-											? ui.backgroundAlt
-											: undefined,
+										backgroundColor: isSelected ? ui.backgroundAlt : undefined,
 										paddingLeft: 1,
 									}}
 								>

@@ -50,11 +50,7 @@ export function DayCell({
 			? ui.background
 			: ui.foreground;
 	const borderColor =
-		isToday && !isSelected
-			? ui.today
-			: isSelected
-				? ui.selected
-				: ui.border;
+		isToday && !isSelected ? ui.today : isSelected ? ui.selected : ui.border;
 
 	return (
 		<box

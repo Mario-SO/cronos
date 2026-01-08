@@ -1,11 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import {
-	COLOR_NAMES,
-	COLORS,
-	getColorByIndex,
-	getColorHex,
-	THEME,
-} from "../src/lib/colors";
+import type { ColorName } from "@core/types";
+import { COLOR_NAMES, getColorByIndex } from "../src/lib/colors";
+import { BUILTIN_THEMES, DEFAULT_THEME_ID } from "../src/lib/themes";
+
+const theme = BUILTIN_THEMES[DEFAULT_THEME_ID];
+if (!theme) {
+	throw new Error(`Missing builtin theme: ${DEFAULT_THEME_ID}`);
+}
+const COLORS = theme.eventColors;
+const THEME = theme.ui;
+const getColorHex = (name: ColorName) => COLORS[name];
 
 describe("COLOR_NAMES", () => {
 	test("contains all 7 colors", () => {

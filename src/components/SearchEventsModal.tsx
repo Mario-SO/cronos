@@ -273,9 +273,7 @@ export function SearchEventsModal({
 									key={event.id}
 									style={{
 										flexDirection: "row",
-										backgroundColor: isSelected
-											? ui.backgroundAlt
-											: undefined,
+										backgroundColor: isSelected ? ui.backgroundAlt : undefined,
 										padding: 0,
 										paddingLeft: 1,
 									}}

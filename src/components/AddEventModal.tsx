@@ -136,9 +136,7 @@ export function AddEventModal({
 				</box>
 				<box style={{ flexDirection: "row" }}>
 					<text fg={ui.foregroundDim}>Color: </text>
-					<text fg={theme.eventColors[parsed.color]}>
-						● {parsed.color}
-					</text>
+					<text fg={theme.eventColors[parsed.color]}>● {parsed.color}</text>
 				</box>
 			</box>
 
