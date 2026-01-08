@@ -7,6 +7,7 @@ import {
 	selectNextWeek,
 	selectPreviousDay,
 	selectPreviousWeek,
+	toggleCalendarViewMode,
 } from "@state/calendar";
 import type { CommandDefinition } from "./types";
 
@@ -59,6 +60,13 @@ export const calendarCommands = [
 		keys: ["t"],
 		layers: ["global"],
 		run: () => jumpToToday,
+	},
+	{
+		id: "calendar.toggleYearView",
+		title: "Year view",
+		keys: ["y"],
+		layers: ["global"],
+		run: () => toggleCalendarViewMode,
 	},
 	{
 		id: "calendar.toggleAgenda",

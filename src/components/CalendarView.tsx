@@ -111,6 +111,7 @@ export function CalendarView({
 	}
 	const singleBindings = [
 		{ id: "calendar.today", label: "Today" },
+		{ id: "calendar.toggleYearView", label: "Year view" },
 		{ id: "modal.openAdd", label: "Add" },
 		{ id: "calendar.toggleAgenda", label: "Agenda" },
 		{ id: "modal.openSearch", label: "Search" },

@@ -3,6 +3,7 @@ import { AgendaSideView } from "@components/AgendaSideView";
 import { CalendarView } from "@components/CalendarView";
 import { GoToDateModal } from "@components/GoToDateModal";
 import { SearchEventsModal } from "@components/SearchEventsModal";
+import { YearlyCalendarView } from "@components/YearlyCalendarView";
 import {
 	formatHelpText,
 	getActiveBindings,
@@ -86,11 +87,19 @@ export function App() {
 				}}
 			>
 				{/* Calendar View */}
-				<CalendarView
-					state={calendarState}
-					availableWidth={calendarWidth}
-					availableHeight={terminalSize.height}
-				/>
+				{calendarState.viewMode === "year" ? (
+					<YearlyCalendarView
+						state={calendarState}
+						availableWidth={calendarWidth}
+						availableHeight={terminalSize.height}
+					/>
+				) : (
+					<CalendarView
+						state={calendarState}
+						availableWidth={calendarWidth}
+						availableHeight={terminalSize.height}
+					/>
+				)}
 			</box>
 
 			{agendaVisible && (

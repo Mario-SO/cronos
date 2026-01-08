@@ -19,6 +19,8 @@ export interface CalendarEvent {
 export interface CalendarState {
 	displayedMonth: Date; // First day of the displayed month
 	selectedDate: Date; // Currently selected date
+	viewMode: "month" | "year";
+	yearGridColumns: number;
 }
 
 export type ModalType = "none" | "add" | "goto" | "search";

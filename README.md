@@ -21,6 +21,7 @@ bun dev
 | `h` / `l` | Previous / Next day |
 | `k` / `j` | Previous / Next week |
 | `t` | Jump to today |
+| `y` | Toggle year view |
 | `a` | Add event |
 | `v` | Toggle agenda side view |
 | `g` | Go to date |
@@ -61,13 +62,13 @@ export const calendarCommands = [
 ## Roadmap
 
 - [ ] Help on '?'
-- [ ] Yearly view
 - [ ] Settings modal
     - [ ] Google Calendar sync
     - [ ] iCal export/import
 - [ ] Multiple day events??
 - [ ] Recurring events
 - [ ] cli support (cronos add ...)
-- [x] Agenda side view
 - [x] Persistent storage
 - [x] Search through event list
+- [x] Agenda side view
+- [x] Yearly view
