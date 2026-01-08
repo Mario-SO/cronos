@@ -5,12 +5,12 @@ import {
 	setGoToDateCommandHandlers,
 } from "@core/commands";
 import { useModalDimensions } from "@hooks/useModalDimensions";
-import { THEME } from "@lib/colors";
 import {
 	getShortMonthName,
 	isValidDate,
 	parseMonthAbbrev,
 } from "@lib/dateUtils";
+import { useTheme } from "@state/theme";
 import { useCallback, useEffect, useState } from "react";
 import { ModalFrame } from "./ModalFrame";
 
@@ -37,6 +37,7 @@ export function GoToDateModal({ currentDate, onGo }: GoToDateModalProps) {
 	const [yearValue, setYearValue] = useState(String(currentDate.getFullYear()));
 	const [focusedField, setFocusedField] = useState<FocusedField>("day");
 	const [error, setError] = useState<string | null>(null);
+	const ui = useTheme().ui;
 
 	const focusNextField = useCallback(() => {
 		setFocusedField((prev) => {
@@ -110,7 +111,7 @@ export function GoToDateModal({ currentDate, onGo }: GoToDateModalProps) {
 	return (
 		<ModalFrame width={modalWidth} height={modalHeight}>
 			{/* Title */}
-			<text fg={THEME.selected} style={{ marginBottom: 1 }}>
+			<text fg={ui.selected} style={{ marginBottom: 1 }}>
 				Go To Date
 			</text>
 
@@ -118,12 +119,12 @@ export function GoToDateModal({ currentDate, onGo }: GoToDateModalProps) {
 			<box style={{ flexDirection: "row", gap: 1, marginBottom: 1 }}>
 				{/* Day */}
 				<box style={{ flexDirection: "column" }}>
-					<text fg={THEME.foregroundDim}>Day</text>
+					<text fg={ui.foregroundDim}>Day</text>
 					<box
 						style={{
 							border: true,
 							borderColor:
-								focusedField === "day" ? THEME.selected : THEME.border,
+								focusedField === "day" ? ui.selected : ui.border,
 							width: 6,
 							height: 3,
 						}}
@@ -138,12 +139,12 @@ export function GoToDateModal({ currentDate, onGo }: GoToDateModalProps) {
 
 				{/* Month */}
 				<box style={{ flexDirection: "column" }}>
-					<text fg={THEME.foregroundDim}>Month</text>
+					<text fg={ui.foregroundDim}>Month</text>
 					<box
 						style={{
 							border: true,
 							borderColor:
-								focusedField === "month" ? THEME.selected : THEME.border,
+								focusedField === "month" ? ui.selected : ui.border,
 							width: 8,
 							height: 3,
 						}}
@@ -158,12 +159,12 @@ export function GoToDateModal({ currentDate, onGo }: GoToDateModalProps) {
 
 				{/* Year */}
 				<box style={{ flexDirection: "column" }}>
-					<text fg={THEME.foregroundDim}>Year</text>
+					<text fg={ui.foregroundDim}>Year</text>
 					<box
 						style={{
 							border: true,
 							borderColor:
-								focusedField === "year" ? THEME.selected : THEME.border,
+								focusedField === "year" ? ui.selected : ui.border,
 							width: 8,
 							height: 3,
 						}}
@@ -179,13 +180,13 @@ export function GoToDateModal({ currentDate, onGo }: GoToDateModalProps) {
 
 			{/* Error */}
 			{error && (
-				<text fg={THEME.error} style={{ marginBottom: 1 }}>
+				<text fg={ui.error} style={{ marginBottom: 1 }}>
 					{error}
 				</text>
 			)}
 
 			{/* Help */}
-			{helpText && <text fg={THEME.foregroundDim}>{helpText}</text>}
+			{helpText && <text fg={ui.foregroundDim}>{helpText}</text>}
 		</ModalFrame>
 	);
 }

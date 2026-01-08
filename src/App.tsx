@@ -3,6 +3,7 @@ import { AgendaSideView } from "@components/AgendaSideView";
 import { CalendarView } from "@components/CalendarView";
 import { GoToDateModal } from "@components/GoToDateModal";
 import { SearchEventsModal } from "@components/SearchEventsModal";
+import { SettingsModal } from "@components/SettingsModal";
 import { YearlyCalendarView } from "@components/YearlyCalendarView";
 import {
 	formatHelpText,
@@ -12,10 +13,10 @@ import {
 import { useCommandHandler } from "@core/keyboard";
 import type { CalendarEvent } from "@core/types";
 import { useTerminalSize } from "@hooks/useTerminalSize";
-import { THEME } from "@lib/colors";
 import { useAgendaState } from "@state/agenda";
 import { goToDate, useCalendarState } from "@state/calendar";
 import { closeModal, openEditModal, useModalState } from "@state/modal";
+import { useTheme } from "@state/theme";
 import { Effect } from "effect";
 import { useCallback } from "react";
 
@@ -25,6 +26,7 @@ export function App() {
 	const modalState = useModalState();
 	const agendaState = useAgendaState();
 	const terminalSize = useTerminalSize();
+	const ui = useTheme().ui;
 
 	// Wire up keyboard shortcuts
 	useCommandHandler();
@@ -74,7 +76,7 @@ export function App() {
 		<box
 			style={{
 				flexGrow: 1,
-				backgroundColor: THEME.background,
+				backgroundColor: ui.background,
 				flexDirection: "row",
 				alignItems: "stretch",
 			}}
@@ -143,10 +145,12 @@ export function App() {
 				/>
 			)}
 
+			{modalState.type === "settings" && <SettingsModal />}
+
 			{/* Quit hint */}
 			{quitHint && (
 				<box style={{ position: "absolute", bottom: 0, right: 1 }}>
-					<text fg={THEME.foregroundDim}>{quitHint}</text>
+					<text fg={ui.foregroundDim}>{quitHint}</text>
 				</box>
 			)}
 		</box>

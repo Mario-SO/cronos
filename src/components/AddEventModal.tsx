@@ -6,10 +6,10 @@ import {
 } from "@core/commands";
 import type { CalendarEvent } from "@core/types";
 import { useModalDimensions } from "@hooks/useModalDimensions";
-import { getColorHex, THEME } from "@lib/colors";
 import { formatDateKey, formatTimeRange } from "@lib/dateUtils";
 import { parseEventInput, reconstructEventInput } from "@lib/eventParser";
 import { addEvent, updateEvent } from "@state/events";
+import { useTheme } from "@state/theme";
 import { Effect } from "effect";
 import { useCallback, useEffect, useState } from "react";
 import { ModalFrame } from "./ModalFrame";
@@ -35,6 +35,8 @@ export function AddEventModal({
 	});
 	const initialValue = editingEvent ? reconstructEventInput(editingEvent) : "";
 	const [inputValue, setInputValue] = useState(initialValue);
+	const theme = useTheme();
+	const ui = theme.ui;
 
 	const parsed = parseEventInput(inputValue);
 	const dateKey = formatDateKey(selectedDate);
@@ -97,7 +99,7 @@ export function AddEventModal({
 	return (
 		<ModalFrame width={modalWidth} height={modalHeight}>
 			{/* Title */}
-			<text fg={THEME.selected} style={{ marginBottom: 1 }}>
+			<text fg={ui.selected} style={{ marginBottom: 1 }}>
 				{editingEvent ? "Edit Event" : "Add Event"} - {formattedDate}
 			</text>
 
@@ -105,7 +107,7 @@ export function AddEventModal({
 			<box
 				style={{
 					border: true,
-					borderColor: THEME.border,
+					borderColor: ui.border,
 					height: 3,
 					marginBottom: 1,
 				}}
@@ -121,27 +123,29 @@ export function AddEventModal({
 			{/* Live Preview */}
 			<box style={{ flexDirection: "column", marginTop: 1 }}>
 				<box style={{ flexDirection: "row" }}>
-					<text fg={THEME.foregroundDim}>Title: </text>
-					<text fg={parsed.title ? THEME.foreground : THEME.error}>
+					<text fg={ui.foregroundDim}>Title: </text>
+					<text fg={parsed.title ? ui.foreground : ui.error}>
 						{parsed.title || "(enter a title)"}
 					</text>
 				</box>
 				<box style={{ flexDirection: "row" }}>
-					<text fg={THEME.foregroundDim}>Time: </text>
-					<text fg={THEME.foreground}>
+					<text fg={ui.foregroundDim}>Time: </text>
+					<text fg={ui.foreground}>
 						{formatTimeRange(parsed.startTime, parsed.endTime)}
 					</text>
 				</box>
 				<box style={{ flexDirection: "row" }}>
-					<text fg={THEME.foregroundDim}>Color: </text>
-					<text fg={getColorHex(parsed.color)}>● {parsed.color}</text>
+					<text fg={ui.foregroundDim}>Color: </text>
+					<text fg={theme.eventColors[parsed.color]}>
+						● {parsed.color}
+					</text>
 				</box>
 			</box>
 
 			{/* Help */}
 			{helpText && (
 				<box style={{ marginTop: 1 }}>
-					<text fg={THEME.foregroundDim}>{helpText}</text>
+					<text fg={ui.foregroundDim}>{helpText}</text>
 				</box>
 			)}
 		</ModalFrame>

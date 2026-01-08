@@ -1,12 +1,19 @@
-import { THEME } from "@lib/colors";
+import { useTheme } from "@state/theme";
 import type { PropsWithChildren } from "react";
 
 interface ModalFrameProps extends PropsWithChildren {
 	width: number;
 	height: number;
+	zIndex?: number;
 }
 
-export function ModalFrame({ width, height, children }: ModalFrameProps) {
+export function ModalFrame({
+	width,
+	height,
+	zIndex = 10,
+	children,
+}: ModalFrameProps) {
+	const ui = useTheme().ui;
 	return (
 		<box
 			style={{
@@ -17,10 +24,11 @@ export function ModalFrame({ width, height, children }: ModalFrameProps) {
 				height,
 				marginTop: -Math.floor(height / 2),
 				marginLeft: -Math.floor(width / 2),
-				backgroundColor: THEME.background,
+				backgroundColor: ui.background,
 				border: true,
 				borderStyle: "double",
-				borderColor: THEME.borderHighlight,
+				borderColor: ui.borderHighlight,
+				zIndex,
 				flexDirection: "column",
 				padding: 1,
 			}}

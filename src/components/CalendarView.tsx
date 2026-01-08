@@ -6,16 +6,17 @@ import {
 } from "@core/commands";
 import type { CalendarState } from "@core/types";
 import { useTerminalSize } from "@hooks/useTerminalSize";
-import { THEME } from "@lib/colors";
 import {
 	formatDateKey,
 	getDaysInMonth,
 	getMonthName,
+	getWeekdayHeaders,
 	getWeekdayOfFirst,
 	isSameDay,
-	WEEKDAY_HEADERS,
 } from "@lib/dateUtils";
 import { useEventStore } from "@state/events";
+import { useSettings } from "@state/settings";
+import { useTheme } from "@state/theme";
 import { DayCell } from "./DayCell";
 
 interface CalendarViewProps {
@@ -36,6 +37,8 @@ export function CalendarView({
 	const year = displayedMonth.getFullYear();
 	const month = displayedMonth.getMonth();
 	const today = new Date();
+	const settings = useSettings();
+	const ui = useTheme().ui;
 
 	// Calculate responsive cell dimensions
 	// Reserve space: 1 line for header, 1 line for weekday headers, 1 line for help text
@@ -44,7 +47,8 @@ export function CalendarView({
 	const cellWidth = Math.max(8, Math.floor((layoutWidth - 2) / 7)); // -2 for padding
 
 	const daysInMonth = getDaysInMonth(year, month);
-	const firstWeekday = getWeekdayOfFirst(year, month);
+	const firstWeekday = getWeekdayOfFirst(year, month, settings.weekStartDay);
+	const weekdayHeaders = getWeekdayHeaders(settings.weekStartDay);
 
 	// Get previous month's days to fill in
 	const prevMonth = month === 0 ? 11 : month - 1;
@@ -100,18 +104,18 @@ export function CalendarView({
 		["H", "J", "K", "L"],
 	);
 	if (movementKeys) {
-		helpParts.push(`${movementKeys} Day movement`);
+		helpParts.push(`${movementKeys} Days`);
 	}
 	const monthKeys = buildKeys(
 		["calendar.prevMonth", "calendar.nextMonth"],
 		["[", "]"],
 	);
 	if (monthKeys) {
-		helpParts.push(`${monthKeys} Prev/Next Month`);
+		helpParts.push(`${monthKeys} Months`);
 	}
 	const singleBindings = [
 		{ id: "calendar.today", label: "Today" },
-		{ id: "calendar.toggleYearView", label: "Year view" },
+		{ id: "calendar.toggleYearView", label: "Year" },
 		{ id: "modal.openAdd", label: "Add" },
 		{ id: "calendar.toggleAgenda", label: "Agenda" },
 		{ id: "modal.openSearch", label: "Search" },
@@ -129,12 +133,12 @@ export function CalendarView({
 		<box style={{ flexDirection: "column", alignItems: "center" }}>
 			{/* Month/Year Header */}
 			<box style={{ marginBottom: 1 }}>
-				<text fg={THEME.foreground}>{monthYearHeader}</text>
+				<text fg={ui.foreground}>{monthYearHeader}</text>
 			</box>
 
 			{/* Weekday Headers */}
 			<box style={{ flexDirection: "row" }}>
-				{WEEKDAY_HEADERS.map((header) => (
+				{weekdayHeaders.map((header) => (
 					<box
 						key={header}
 						style={{
@@ -143,7 +147,7 @@ export function CalendarView({
 							justifyContent: "center",
 						}}
 					>
-						<text fg={THEME.foregroundDim}>{header}</text>
+						<text fg={ui.foregroundDim}>{header}</text>
 					</box>
 				))}
 			</box>
@@ -184,7 +188,7 @@ export function CalendarView({
 			{/* Help text */}
 			{helpText && (
 				<box style={{ marginTop: 1 }}>
-					<text fg={THEME.foregroundDim}>{helpText}</text>
+					<text fg={ui.foregroundDim}>{helpText}</text>
 				</box>
 			)}
 		</box>

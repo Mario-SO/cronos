@@ -6,10 +6,10 @@ import {
 	setAgendaCommandHandlers,
 } from "@core/commands";
 import type { CalendarEvent } from "@core/types";
-import { getColorHex, THEME } from "@lib/colors";
 import { formatDateKey, formatTimeRange } from "@lib/dateUtils";
 import type { ScrollBoxRenderable } from "@opentui/core";
 import { deleteEvent, useEventsForDate } from "@state/events";
+import { useTheme } from "@state/theme";
 import { Effect } from "effect";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -31,6 +31,8 @@ export function AgendaSideView({
 	const dateKey = formatDateKey(selectedDate);
 	const events = useEventsForDate(dateKey);
 	const [selectedIndex, setSelectedIndex] = useState(0);
+	const theme = useTheme();
+	const ui = theme.ui;
 
 	const clampedIndex = Math.min(selectedIndex, Math.max(0, events.length - 1));
 
@@ -148,24 +150,24 @@ export function AgendaSideView({
 				height,
 				border: true,
 				borderStyle: "single",
-				borderColor: THEME.borderHighlight,
+				borderColor: ui.borderHighlight,
 				flexDirection: "column",
 				padding: 1,
 			}}
 		>
-			<text fg={THEME.selected}>Agenda - {formattedDate}</text>
+			<text fg={ui.selected}>Agenda - {formattedDate}</text>
 
 			<box
 				style={{
 					flexDirection: "column",
 					height: visibleEvents + 2,
 					border: true,
-					borderColor: THEME.border,
+					borderColor: ui.border,
 					overflow: "hidden",
 				}}
 			>
 				{events.length === 0 ? (
-					<text fg={THEME.foregroundDim} style={{ padding: 1 }}>
+					<text fg={ui.foregroundDim} style={{ padding: 1 }}>
 						No events for this day
 					</text>
 				) : (
@@ -182,26 +184,26 @@ export function AgendaSideView({
 									style={{
 										flexDirection: "row",
 										backgroundColor: isSelected
-											? THEME.backgroundAlt
+											? ui.backgroundAlt
 											: undefined,
 										paddingLeft: 1,
 									}}
 								>
-									<text fg={getColorHex(event.color)}>●</text>
+									<text fg={theme.eventColors[event.color]}>●</text>
 									<text
-										fg={THEME.foregroundDim}
+										fg={ui.foregroundDim}
 										style={{ marginLeft: 1, width: timeWidth }}
 									>
 										{formatTimeRange(event.startTime, event.endTime)}
 									</text>
 									<text
-										fg={isSelected ? THEME.foreground : THEME.foregroundDim}
+										fg={isSelected ? ui.foreground : ui.foregroundDim}
 										style={{ marginLeft: 1, width: titleWidth }}
 									>
 										{event.title.slice(0, titleWidth)}
 									</text>
 									{isSelected && (
-										<text fg={THEME.selected} style={{ marginLeft: 1 }}>
+										<text fg={ui.selected} style={{ marginLeft: 1 }}>
 											◀
 										</text>
 									)}
@@ -212,7 +214,7 @@ export function AgendaSideView({
 				)}
 			</box>
 
-			{helpText && <text fg={THEME.foregroundDim}>{helpText}</text>}
+			{helpText && <text fg={ui.foregroundDim}>{helpText}</text>}
 		</box>
 	);
 }

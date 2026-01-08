@@ -7,11 +7,11 @@ import {
 } from "@core/commands";
 import type { CalendarEvent } from "@core/types";
 import { useModalDimensions } from "@hooks/useModalDimensions";
-import { getColorHex, THEME } from "@lib/colors";
 import { SEARCH_MODAL_TITLE_LENGTH } from "@lib/constants";
 import { formatTimeRange, parseDateKey } from "@lib/dateUtils";
 import type { ScrollBoxRenderable } from "@opentui/core";
 import { deleteEvent, getAllEvents } from "@state/events";
+import { useTheme } from "@state/theme";
 import { Effect } from "effect";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ModalFrame } from "./ModalFrame";
@@ -81,6 +81,8 @@ export function SearchEventsModal({
 	});
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);
+	const theme = useTheme();
+	const ui = theme.ui;
 	// Local snapshot since the event store is external to React.
 	const [allEvents, setAllEvents] = useState<CalendarEvent[]>(() =>
 		Effect.runSync(getAllEvents),
@@ -220,7 +222,7 @@ export function SearchEventsModal({
 	return (
 		<ModalFrame width={modalWidth} height={modalHeight}>
 			{/* Title */}
-			<text fg={THEME.selected} style={{ marginBottom: 1 }}>
+			<text fg={ui.selected} style={{ marginBottom: 1 }}>
 				Search Events
 			</text>
 
@@ -228,7 +230,7 @@ export function SearchEventsModal({
 			<box
 				style={{
 					border: true,
-					borderColor: THEME.selected,
+					borderColor: ui.selected,
 					height: 3,
 					marginBottom: 1,
 				}}
@@ -250,12 +252,12 @@ export function SearchEventsModal({
 					flexDirection: "column",
 					height: visibleEvents + 2,
 					border: true,
-					borderColor: THEME.border,
+					borderColor: ui.border,
 					overflow: "hidden",
 				}}
 			>
 				{filteredEvents.length === 0 ? (
-					<text fg={THEME.foregroundDim} style={{ padding: 1 }}>
+					<text fg={ui.foregroundDim} style={{ padding: 1 }}>
 						{allEvents.length === 0 ? "No events yet" : "No matching events"}
 					</text>
 				) : (
@@ -272,33 +274,33 @@ export function SearchEventsModal({
 									style={{
 										flexDirection: "row",
 										backgroundColor: isSelected
-											? THEME.backgroundAlt
+											? ui.backgroundAlt
 											: undefined,
 										padding: 0,
 										paddingLeft: 1,
 									}}
 								>
-									<text fg={getColorHex(event.color)}>●</text>
+									<text fg={theme.eventColors[event.color]}>●</text>
 									<text
-										fg={THEME.foregroundDim}
+										fg={ui.foregroundDim}
 										style={{ marginLeft: 1, width: dateWidth }}
 									>
 										{formatEventDate(event.date)}
 									</text>
 									<text
-										fg={THEME.foregroundDim}
+										fg={ui.foregroundDim}
 										style={{ marginLeft: 1, width: timeWidth }}
 									>
 										{formatTimeRange(event.startTime, event.endTime)}
 									</text>
 									<text
-										fg={isSelected ? THEME.foreground : THEME.foregroundDim}
+										fg={isSelected ? ui.foreground : ui.foregroundDim}
 										style={{ marginLeft: 1 }}
 									>
 										{event.title.slice(0, SEARCH_MODAL_TITLE_LENGTH)}
 									</text>
 									{isSelected && (
-										<text fg={THEME.selected} style={{ marginLeft: 1 }}>
+										<text fg={ui.selected} style={{ marginLeft: 1 }}>
 											◀
 										</text>
 									)}
@@ -312,7 +314,7 @@ export function SearchEventsModal({
 			{/* Help */}
 			{helpText && (
 				<box style={{ marginTop: 1 }}>
-					<text fg={THEME.foregroundDim}>{helpText}</text>
+					<text fg={ui.foregroundDim}>{helpText}</text>
 				</box>
 			)}
 		</ModalFrame>

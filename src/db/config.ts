@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
  * - Linux: ~/.local/share/cronos
  * - Windows: %APPDATA%/cronos (fallback)
  */
-function getDefaultDataDir(): string {
+export function getDefaultDataDir(): string {
 	const home = homedir();
 	const os = platform();
 
