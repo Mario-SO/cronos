@@ -62,7 +62,8 @@ export const calendarCommands = [
 ## Roadmap
 
 - [ ] Help on '?'
-- [ ] Settings modal
+- [ ] Settings modal on '.'
+    - [ ] Themes
     - [ ] Google Calendar sync
     - [ ] iCal export/import
 - [ ] Multiple day events??
