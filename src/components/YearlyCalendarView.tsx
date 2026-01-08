@@ -6,10 +6,16 @@ import {
 } from "@core/commands";
 import type { CalendarState } from "@core/types";
 import { useTerminalSize } from "@hooks/useTerminalSize";
-import { getColorHex, THEME } from "@lib/colors";
-import { formatDateKey, isSameDay } from "@lib/dateUtils";
+import {
+	formatDateKey,
+	getWeekdayCompactLabels,
+	getWeekdayIndex,
+	isSameDay,
+} from "@lib/dateUtils";
 import { setYearGridColumns } from "@state/calendar";
 import { useEventStore } from "@state/events";
+import { useSettings } from "@state/settings";
+import { useTheme } from "@state/theme";
 import { Effect } from "effect";
 import { useEffect } from "react";
 
@@ -31,8 +37,6 @@ const MIN_CELL_WIDTH_STACKED = 7;
 const MIN_CELL_WIDTH_COMPACT = 5;
 const MIN_CELL_HEIGHT_STACKED = 4;
 const MIN_CELL_HEIGHT_COMPACT = 2;
-const WEEKDAY_COMPACT_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
-
 function getDaysInYear(year: number): number {
 	const start = new Date(year, 0, 1);
 	const end = new Date(year + 1, 0, 1);
@@ -96,6 +100,10 @@ export function YearlyCalendarView({
 	const today = new Date();
 	const totalDays = getDaysInYear(year);
 	const eventStore = useEventStore();
+	const settings = useSettings();
+	const compactLabels = getWeekdayCompactLabels(settings.weekStartDay);
+	const theme = useTheme();
+	const ui = theme.ui;
 
 	const ctx = getCommandContext();
 	const bindings = getActiveBindings(ctx, { layerIds: ["global"] });
@@ -113,14 +121,14 @@ export function YearlyCalendarView({
 		["H", "J", "K", "L"],
 	);
 	if (movementKeys) {
-		helpParts.push(`${movementKeys} Day movement`);
+		helpParts.push(`${movementKeys} Days`);
 	}
 	const monthKeys = buildKeys(
 		["calendar.prevMonth", "calendar.nextMonth"],
 		["[", "]"],
 	);
 	if (monthKeys) {
-		helpParts.push(`${monthKeys} Prev/Next Month`);
+		helpParts.push(`${monthKeys} Months`);
 	}
 	const singleBindings = [
 		{ id: "calendar.today", label: "Today" },
@@ -155,7 +163,7 @@ export function YearlyCalendarView({
 	return (
 		<box style={{ flexDirection: "column", alignItems: "center" }}>
 			<box style={{ marginBottom: 1 }}>
-				<text fg={THEME.foreground}>{year}</text>
+				<text fg={ui.foreground}>{year}</text>
 			</box>
 
 			<box
@@ -197,25 +205,28 @@ export function YearlyCalendarView({
 								const monthLabel = isMonthStart
 									? date.toLocaleString("en-US", { month: "short" })
 									: "";
-								const weekdayIndex = (date.getDay() + 6) % 7;
-								const weekdayLabel = WEEKDAY_COMPACT_LABELS[weekdayIndex] ?? "";
+								const weekdayIndex = getWeekdayIndex(
+									date,
+									settings.weekStartDay,
+								);
+								const weekdayLabel = compactLabels[weekdayIndex] ?? "";
 								const headerLabel = monthLabel || weekdayLabel;
 								const dayText = String(date.getDate()).padStart(2, "0");
-								const bgColor = isSelected ? THEME.selected : undefined;
+								const bgColor = isSelected ? ui.selected : undefined;
 								const dayFgColor = isSelected
-									? THEME.background
+									? ui.background
 									: isToday
-										? THEME.today
+										? ui.today
 										: isMonthStart
-											? THEME.accentAlt
-											: THEME.foreground;
+											? ui.accentAlt
+											: ui.foreground;
 								const borderColor = isSelected
-									? THEME.selected
+									? ui.selected
 									: isToday
-										? THEME.today
+										? ui.today
 										: isMonthStart
-											? THEME.accentAlt
-											: THEME.border;
+											? ui.accentAlt
+											: ui.border;
 								const showBorder = layout.mode !== "compact";
 
 								return (
@@ -233,7 +244,7 @@ export function YearlyCalendarView({
 									>
 										{layout.mode === "compact" ? (
 											<>
-												<text fg={THEME.foregroundDim}>{headerLabel}</text>
+												<text fg={ui.foregroundDim}>{headerLabel}</text>
 												<text fg={dayFgColor}>{dayText}</text>
 											</>
 										) : (
@@ -241,7 +252,7 @@ export function YearlyCalendarView({
 												<box style={{ flexDirection: "row" }}>
 													<text fg={dayFgColor}>{dayText}</text>
 													<text
-														fg={THEME.foregroundDim}
+														fg={ui.foregroundDim}
 														style={{ marginLeft: 1 }}
 													>
 														{headerLabel}
@@ -249,7 +260,10 @@ export function YearlyCalendarView({
 												</box>
 												<box style={{ flexDirection: "row" }}>
 													{displayEvents.map((event) => (
-														<text key={event.id} fg={getColorHex(event.color)}>
+														<text
+															key={event.id}
+															fg={theme.eventColors[event.color]}
+														>
 															●
 														</text>
 													))}
@@ -266,7 +280,7 @@ export function YearlyCalendarView({
 
 			{helpText && (
 				<box style={{ marginTop: 1 }}>
-					<text fg={THEME.foregroundDim}>{helpText}</text>
+					<text fg={ui.foregroundDim}>{helpText}</text>
 				</box>
 			)}
 		</box>

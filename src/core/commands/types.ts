@@ -24,6 +24,16 @@ export interface SearchModalCommandHandlers {
 	deleteSelection: () => void;
 }
 
+export interface SettingsModalCommandHandlers {
+	nextSection: () => void;
+	prevSection: () => void;
+	nextOption: () => void;
+	prevOption: () => void;
+	focusNextArea: () => void;
+	focusPrevArea: () => void;
+	activate: () => void;
+}
+
 export interface CommandContext {
 	modalType: ModalType;
 	agendaOpen: boolean;
@@ -32,6 +42,7 @@ export interface CommandContext {
 	addModal?: AddModalCommandHandlers | null;
 	gotoModal?: GoToDateCommandHandlers | null;
 	searchModal?: SearchModalCommandHandlers | null;
+	settingsModal?: SettingsModalCommandHandlers | null;
 }
 
 export interface KeyBindingConfig {
@@ -46,7 +57,8 @@ export type CommandLayerId =
 	| "agenda"
 	| "modal:add"
 	| "modal:goto"
-	| "modal:search";
+	| "modal:search"
+	| "modal:settings";
 
 export interface CommandDefinition {
 	id: string;

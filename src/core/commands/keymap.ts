@@ -56,6 +56,10 @@ const KEY_LABELS: Record<string, string> = {
 
 const layerDefinitions: Array<Omit<KeymapLayer, "bindings">> = [
 	{
+		id: "modal:settings",
+		when: (ctx) => ctx.modalType === "settings",
+	},
+	{
 		id: "modal:search",
 		when: (ctx) => ctx.modalType === "search",
 	},

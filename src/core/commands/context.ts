@@ -6,12 +6,14 @@ import type {
 	CommandContext,
 	GoToDateCommandHandlers,
 	SearchModalCommandHandlers,
+	SettingsModalCommandHandlers,
 } from "./types";
 
 let agendaHandlers: AgendaCommandHandlers | null = null;
 let addModalHandlers: AddModalCommandHandlers | null = null;
 let gotoModalHandlers: GoToDateCommandHandlers | null = null;
 let searchModalHandlers: SearchModalCommandHandlers | null = null;
+let settingsModalHandlers: SettingsModalCommandHandlers | null = null;
 
 export function setAgendaCommandHandlers(
 	handlers: AgendaCommandHandlers | null,
@@ -37,6 +39,12 @@ export function setSearchModalCommandHandlers(
 	searchModalHandlers = handlers;
 }
 
+export function setSettingsModalCommandHandlers(
+	handlers: SettingsModalCommandHandlers | null,
+): void {
+	settingsModalHandlers = handlers;
+}
+
 export function getCommandContext(): CommandContext {
 	const modalState = getModalState();
 	const agendaState = getAgendaState();
@@ -50,5 +58,6 @@ export function getCommandContext(): CommandContext {
 		addModal: addModalHandlers,
 		gotoModal: gotoModalHandlers,
 		searchModal: searchModalHandlers,
+		settingsModal: settingsModalHandlers,
 	};
 }

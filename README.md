@@ -62,10 +62,13 @@ export const calendarCommands = [
 ## Roadmap
 
 - [ ] Help on '?'
-- [ ] Settings modal on '.'
+- [ ] Settings modal on ','
+    - [x] Week start day
+    - [x] Notification options
     - [ ] Themes
     - [ ] Google Calendar sync
     - [ ] iCal export/import
+- [ ] Notifications for upcoming events
 - [ ] Multiple day events??
 - [ ] Recurring events
 - [ ] cli support (cronos add ...)

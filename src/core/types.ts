@@ -23,7 +23,19 @@ export interface CalendarState {
 	yearGridColumns: number;
 }
 
-export type ModalType = "none" | "add" | "goto" | "search";
+export type ModalType = "none" | "add" | "goto" | "search" | "settings";
+
+export type WeekStartDay = "monday" | "sunday";
+
+export type ThemeId = string;
+
+export interface Settings {
+	version: number;
+	weekStartDay: WeekStartDay;
+	notificationsEnabled: boolean;
+	notificationLeadMinutes: number;
+	themeId: ThemeId;
+}
 
 export interface ModalState {
 	type: ModalType;

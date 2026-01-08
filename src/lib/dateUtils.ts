@@ -1,3 +1,5 @@
+import type { WeekStartDay } from "@core/types";
+
 export function getDaysInMonth(year: number, month: number): number {
 	return new Date(year, month + 1, 0).getDate();
 }
@@ -6,10 +8,21 @@ export function getFirstDayOfMonth(date: Date): Date {
 	return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
-export function getWeekdayOfFirst(year: number, month: number): number {
-	// Returns 0 = Monday, 6 = Sunday (ISO week)
-	const day = new Date(year, month, 1).getDay();
-	return day === 0 ? 6 : day - 1;
+export function getWeekdayOfFirst(
+	year: number,
+	month: number,
+	weekStartDay: WeekStartDay = "monday",
+): number {
+	const day = new Date(year, month, 1).getDay(); // 0 = Sunday, 6 = Saturday
+	return weekStartDay === "sunday" ? day : day === 0 ? 6 : day - 1;
+}
+
+export function getWeekdayIndex(
+	date: Date,
+	weekStartDay: WeekStartDay = "monday",
+): number {
+	const day = date.getDay();
+	return weekStartDay === "sunday" ? day : day === 0 ? 6 : day - 1;
 }
 
 export function formatDateKey(date: Date): string {
@@ -130,7 +143,7 @@ export function formatTimeRange(start?: number, end?: number): string {
 	return `${formatTime(start)}-${formatTime(end)}`;
 }
 
-export const WEEKDAY_HEADERS = [
+const WEEKDAY_HEADERS_MONDAY = [
 	"Mon",
 	"Tue",
 	"Wed",
@@ -139,3 +152,32 @@ export const WEEKDAY_HEADERS = [
 	"Sat",
 	"Sun",
 ];
+
+const WEEKDAY_HEADERS_SUNDAY = [
+	"Sun",
+	"Mon",
+	"Tue",
+	"Wed",
+	"Thu",
+	"Fri",
+	"Sat",
+];
+
+const WEEKDAY_COMPACT_LABELS_MONDAY = ["M", "T", "W", "T", "F", "S", "S"];
+const WEEKDAY_COMPACT_LABELS_SUNDAY = ["S", "M", "T", "W", "T", "F", "S"];
+
+export function getWeekdayHeaders(
+	weekStartDay: WeekStartDay = "monday",
+): string[] {
+	return weekStartDay === "sunday"
+		? WEEKDAY_HEADERS_SUNDAY
+		: WEEKDAY_HEADERS_MONDAY;
+}
+
+export function getWeekdayCompactLabels(
+	weekStartDay: WeekStartDay = "monday",
+): string[] {
+	return weekStartDay === "sunday"
+		? WEEKDAY_COMPACT_LABELS_SUNDAY
+		: WEEKDAY_COMPACT_LABELS_MONDAY;
+}

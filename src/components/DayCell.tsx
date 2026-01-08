@@ -1,6 +1,6 @@
 import type { CalendarEvent } from "@core/types";
-import { getColorHex, THEME } from "@lib/colors";
 import { DAY_CELL_EVENT_PREVIEWS, DAY_CELL_TITLE_LENGTH } from "@lib/constants";
+import { useTheme } from "@state/theme";
 
 interface DayCellProps {
 	day: number;
@@ -21,6 +21,8 @@ export function DayCell({
 	width = 12,
 	height = 5,
 }: DayCellProps) {
+	const theme = useTheme();
+	const ui = theme.ui;
 	const maxEventPreviews = DAY_CELL_EVENT_PREVIEWS;
 	// Calculate how many events we can display based on available height
 	// Reserve 1 line for day number, 1 line for "+x more" if needed
@@ -38,21 +40,21 @@ export function DayCell({
 	const moreCount = events.length - effectiveMax;
 
 	const bgColor = isSelected
-		? THEME.selected
+		? ui.selected
 		: isToday
-			? THEME.backgroundAlt
+			? ui.backgroundAlt
 			: undefined;
 	const fgColor = !isCurrentMonth
-		? THEME.foregroundDim
+		? ui.foregroundDim
 		: isSelected
-			? THEME.background
-			: THEME.foreground;
+			? ui.background
+			: ui.foreground;
 	const borderColor =
 		isToday && !isSelected
-			? THEME.today
+			? ui.today
 			: isSelected
-				? THEME.selected
-				: THEME.border;
+				? ui.selected
+				: ui.border;
 
 	return (
 		<box
@@ -72,9 +74,9 @@ export function DayCell({
 			</text>
 			{displayEvents.map((event) => (
 				<box key={event.id} style={{ flexDirection: "row", marginLeft: 1 }}>
-					<text fg={getColorHex(event.color)}>●</text>
+					<text fg={theme.eventColors[event.color]}>●</text>
 					<text
-						fg={isSelected ? THEME.background : THEME.foregroundDim}
+						fg={isSelected ? ui.background : ui.foregroundDim}
 						style={{ marginLeft: 1 }}
 					>
 						{event.title.slice(0, DAY_CELL_TITLE_LENGTH)}
@@ -82,7 +84,10 @@ export function DayCell({
 				</box>
 			))}
 			{moreCount > 0 && (
-				<text fg={THEME.foregroundDim} style={{ marginLeft: 1 }}>
+				<text
+					fg={isSelected ? ui.background : ui.foreground}
+					style={{ marginLeft: 1 }}
+				>
 					+{moreCount} more
 				</text>
 			)}

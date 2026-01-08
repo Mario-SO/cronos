@@ -7,6 +7,7 @@ export {
 	setAgendaCommandHandlers,
 	setGoToDateCommandHandlers,
 	setSearchModalCommandHandlers,
+	setSettingsModalCommandHandlers,
 } from "./context";
 export { executeCommand } from "./execute";
 export { buildHelpKeyMap, joinHelpKeys } from "./help";
@@ -29,4 +30,5 @@ export type {
 	KeyBindingInput,
 	CommandLayerId,
 	SearchModalCommandHandlers,
+	SettingsModalCommandHandlers,
 } from "./types";
