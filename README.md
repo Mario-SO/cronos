@@ -18,7 +18,7 @@ bun dev
 Requires [Bun](https://bun.sh) on your PATH.
 
 ```bash
-npm i -g cronos
+npm i -g @tuis/cronos
 cronos
 ```
 

@@ -1,13 +1,13 @@
 {
-	"name": "cronos",
-	"version": "0.1.2",
+	"name": "@tuis/cronos",
+	"version": "0.1.3",
 	"description": "A terminal calendar app built with OpenTUI.",
 	"module": "src/app/index.tsx",
 	"type": "module",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Mario-SO/cronos.git"
+		"url": "git+https://github.com/Mario-SO/cronos.git"
 	},
 	"keywords": [
 		"calendar",
@@ -22,6 +22,9 @@
 	},
 	"bin": {
 		"cronos": "bin/cronos"
+	},
+	"publishConfig": {
+		"access": "public"
 	},
 	"files": [
 		"bin",
