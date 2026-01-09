@@ -70,7 +70,9 @@ export function SettingsModal() {
 	);
 	const [draftTheme, setDraftTheme] = useState(settings.themeId);
 	const [themeOptionIndex, setThemeOptionIndex] = useState(() => {
-		const index = themeOptions.findIndex((option) => option.id === settings.themeId);
+		const index = themeOptions.findIndex(
+			(option) => option.id === settings.themeId,
+		);
 		return index >= 0 ? index : 0;
 	});
 	const [draftNotificationsEnabled, setDraftNotificationsEnabled] = useState(

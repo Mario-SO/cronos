@@ -35,7 +35,8 @@ export function CalendarSection({
 					{weekStartOptions.map((option, index) => {
 						const isSelected = option.id === draftWeekStart;
 						const fg = isSelected ? ui.selected : ui.foreground;
-						const isFocused = focusArea === "fields" && index === weekStartIndex;
+						const isFocused =
+							focusArea === "fields" && index === weekStartIndex;
 						return (
 							<box
 								key={option.id}
