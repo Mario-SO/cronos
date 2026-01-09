@@ -13,6 +13,24 @@ bun install
 bun dev
 ```
 
+## Install (CLI + TUI)
+
+Requires [Bun](https://bun.sh) on your PATH.
+
+```bash
+npm i -g cronos
+cronos
+```
+
+## CLI
+
+```bash
+cronos list
+cronos list --date 2025-04-10
+cronos add --date 2025-04-10 "Lunch 12pm-1pm #green"
+cronos delete --id event-12-1713456789
+```
+
 ## Keyboard Shortcuts
 
 | Key | Action |
