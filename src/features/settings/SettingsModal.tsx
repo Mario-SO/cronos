@@ -304,14 +304,14 @@ export function SettingsModal() {
 				if (option.disabled) return;
 				if (option.id === "connect") {
 					if (settings.google.connected) {
-						void disconnectGoogleAccount();
+						void Effect.runPromise(disconnectGoogleAccount());
 					} else {
-						void connectGoogleAccount();
+						void Effect.runPromise(connectGoogleAccount());
 					}
 					return;
 				}
 				if (option.id === "sync") {
-					void runGoogleSync();
+					void Effect.runPromise(runGoogleSync());
 					return;
 				}
 				return;

@@ -54,99 +54,82 @@ export const toggleGoogleCalendar = (calendarId: string, enabled: boolean) =>
 		yield* refreshGoogleCalendars();
 	});
 
-export async function connectGoogleAccount(): Promise<void> {
-	Effect.runSync(
-		SubscriptionRef.update(googleSyncStateRef, (state) => ({
+export const connectGoogleAccount = () =>
+	Effect.gen(function* () {
+		yield* SubscriptionRef.update(googleSyncStateRef, (state) => ({
 			...state,
 			status: "syncing" as GoogleSyncStatus,
 			error: undefined,
-		})),
-	);
-	try {
-		await Effect.runPromise(connectGoogle());
-		await Effect.runPromise(syncGoogleNow());
-		const calendars = Effect.runSync(getGoogleCalendars());
+		}));
+		yield* connectGoogle();
+		yield* syncGoogleNow();
+		const calendars = yield* getGoogleCalendars();
 		const lastSyncAt =
 			calendars
 				.map((calendar) => calendar.lastSyncAt)
 				.filter((value): value is string => Boolean(value))
 				.sort()
 				.at(-1) ?? undefined;
-		Effect.runSync(
-			SubscriptionRef.set(googleSyncStateRef, {
-				status: "idle" as GoogleSyncStatus,
-				calendars,
-				lastSyncAt,
-				error: undefined,
-			}),
-		);
-	} catch (error) {
-		const message = error instanceof Error ? error.message : "Connect failed";
-		Effect.runSync(
-			SubscriptionRef.update(googleSyncStateRef, (state) => ({
+		yield* SubscriptionRef.set(googleSyncStateRef, {
+			status: "idle" as GoogleSyncStatus,
+			calendars,
+			lastSyncAt,
+			error: undefined,
+		});
+	}).pipe(
+		Effect.catchAll((error) => {
+			const message = error instanceof Error ? error.message : "Connect failed";
+			return SubscriptionRef.update(googleSyncStateRef, (state) => ({
 				...state,
 				status: "error" as GoogleSyncStatus,
 				error: message,
-			})),
-		);
-	}
-}
+			}));
+		}),
+	);
 
-export async function disconnectGoogleAccount(): Promise<void> {
-	Effect.runSync(
-		SubscriptionRef.update(googleSyncStateRef, (state) => ({
+export const disconnectGoogleAccount = () =>
+	Effect.gen(function* () {
+		yield* SubscriptionRef.update(googleSyncStateRef, (state) => ({
 			...state,
 			status: "idle" as GoogleSyncStatus,
 			error: undefined,
-		})),
-	);
-	try {
-		await Effect.runPromise(disconnectGoogle());
-	} catch {
-		// Ignore disconnect errors and clear local state anyway.
-	}
-	Effect.runSync(
-		SubscriptionRef.set(googleSyncStateRef, {
+		}));
+		yield* Effect.catchAll(disconnectGoogle(), () => Effect.void);
+		yield* SubscriptionRef.set(googleSyncStateRef, {
 			...initialState,
 			error: undefined,
-		}),
-	);
-}
+		});
+	});
 
-export async function runGoogleSync(): Promise<void> {
-	Effect.runSync(
-		SubscriptionRef.update(googleSyncStateRef, (state) => ({
+export const runGoogleSync = () =>
+	Effect.gen(function* () {
+		yield* SubscriptionRef.update(googleSyncStateRef, (state) => ({
 			...state,
 			status: "syncing" as GoogleSyncStatus,
 			error: undefined,
-		})),
-	);
-	try {
-		await Effect.runPromise(syncGoogleNow());
-		const calendars = Effect.runSync(getGoogleCalendars());
+		}));
+		yield* syncGoogleNow();
+		const calendars = yield* getGoogleCalendars();
 		const lastSyncAt =
 			calendars
 				.map((calendar) => calendar.lastSyncAt)
 				.filter((value): value is string => Boolean(value))
 				.sort()
 				.at(-1) ?? undefined;
-		Effect.runSync(
-			SubscriptionRef.update(googleSyncStateRef, (state) => ({
-				...state,
-				status: "idle" as GoogleSyncStatus,
-				calendars,
-				lastSyncAt,
-				error: undefined,
-			})),
-		);
-	} catch (error) {
-		const message = error instanceof Error ? error.message : "Sync failed";
-		Effect.runSync(
-			SubscriptionRef.update(googleSyncStateRef, (state) => ({
+		yield* SubscriptionRef.update(googleSyncStateRef, (state) => ({
+			...state,
+			status: "idle" as GoogleSyncStatus,
+			calendars,
+			lastSyncAt,
+			error: undefined,
+		}));
+	}).pipe(
+		Effect.catchAll((error) => {
+			const message = error instanceof Error ? error.message : "Sync failed";
+			return SubscriptionRef.update(googleSyncStateRef, (state) => ({
 				...state,
 				status: "error" as GoogleSyncStatus,
 				error: message,
-			})),
-		);
-	}
-}
+			}));
+		}),
+	);

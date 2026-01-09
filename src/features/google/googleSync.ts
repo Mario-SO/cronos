@@ -72,9 +72,7 @@ const ensureAccessToken = () =>
 		if (!isTokenExpired(settings.google)) {
 			return settings.google.accessToken;
 		}
-		const refreshed = yield* Effect.tryPromise(() =>
-			refreshGoogleToken(settings.google),
-		);
+		const refreshed = yield* refreshGoogleToken(settings.google);
 		if (!refreshed.accessToken) {
 			return yield* Effect.fail(
 				new Error("Missing access token after refresh"),
@@ -257,7 +255,7 @@ const fetchAllCalendars = (
 
 export const connectGoogle = () =>
 	Effect.gen(function* () {
-		const tokens = yield* Effect.tryPromise(() => startGoogleOAuth());
+		const tokens = yield* startGoogleOAuth();
 		yield* updateSettings({
 			google: {
 				connected: true,

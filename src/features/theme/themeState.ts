@@ -27,18 +27,17 @@ const initialTheme =
 
 export const themeStateRef = createSubscriptionRef(initialTheme);
 
-async function applyAnsiTheme(): Promise<void> {
-	try {
-		const palette = await renderer.getPalette();
+const applyAnsiTheme = () =>
+	Effect.gen(function* () {
+		const palette = yield* Effect.tryPromise(() => renderer.getPalette());
 		const ansiTheme = themeFromPalette(palette, fallbackTheme);
-		Effect.runSync(SubscriptionRef.set(themeStateRef, ansiTheme));
-	} catch {
-		Effect.runSync(SubscriptionRef.set(themeStateRef, fallbackTheme));
-	}
-}
+		yield* SubscriptionRef.set(themeStateRef, ansiTheme);
+	}).pipe(
+		Effect.catchAll(() => SubscriptionRef.set(themeStateRef, fallbackTheme)),
+	);
 
 if (initialThemeId === ANSI_THEME_ID) {
-	void applyAnsiTheme();
+	void Effect.runPromise(applyAnsiTheme());
 }
 
 export function useTheme() {
@@ -57,7 +56,7 @@ export const setThemeId = (themeId: ThemeId) =>
 	Effect.gen(function* () {
 		if (themeId === ANSI_THEME_ID) {
 			yield* SubscriptionRef.set(themeStateRef, fallbackTheme);
-			void applyAnsiTheme();
+			yield* Effect.fork(applyAnsiTheme());
 			return;
 		}
 		const next = resolveTheme(themeId, themeConfig);
