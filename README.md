@@ -28,6 +28,19 @@ bun dev
 | `s` | Search events |
 | `q` | Quit |
 
+## Google Calendar Sync (preview)
+
+Requires an OAuth client for an installed app.
+
+```bash
+export CRONOS_GOOGLE_CLIENT_ID="your-client-id"
+# Optional when using PKCE, required if your client has a secret
+export CRONOS_GOOGLE_CLIENT_SECRET="your-client-secret"
+```
+
+Open Settings (` , `) → Sync → Connect Google. Calendars map to colors, and
+events import as all-day entries for now.
+
 ## Adding a Shortcut
 
 This is the full flow for adding a new shortcut and its behavior end-to-end.

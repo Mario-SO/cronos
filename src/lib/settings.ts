@@ -1,10 +1,15 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type { Settings, ThemeId, WeekStartDay } from "@core/types";
+import type {
+	GoogleSettings,
+	Settings,
+	ThemeId,
+	WeekStartDay,
+} from "@core/types";
 import { getDefaultDataDir } from "@db/config";
 import { DEFAULT_THEME_ID } from "./themes";
 
-export const SETTINGS_VERSION = 1;
+export const SETTINGS_VERSION = 2;
 
 export const DEFAULT_SETTINGS: Settings = {
 	version: SETTINGS_VERSION,
@@ -12,6 +17,9 @@ export const DEFAULT_SETTINGS: Settings = {
 	notificationsEnabled: true,
 	notificationLeadMinutes: 10,
 	themeId: DEFAULT_THEME_ID,
+	google: {
+		connected: false,
+	},
 };
 
 function isWeekStartDay(value: unknown): value is WeekStartDay {
@@ -40,6 +48,31 @@ function normalizeThemeId(value: unknown): ThemeId {
 	return value;
 }
 
+function normalizeGoogleSettings(value: unknown): GoogleSettings {
+	if (!value || typeof value !== "object") {
+		return { ...DEFAULT_SETTINGS.google };
+	}
+	const raw = value as Partial<GoogleSettings>;
+	const connected = isBoolean(raw.connected)
+		? raw.connected
+		: DEFAULT_SETTINGS.google.connected;
+	const accessToken =
+		typeof raw.accessToken === "string" ? raw.accessToken : undefined;
+	const refreshToken =
+		typeof raw.refreshToken === "string" ? raw.refreshToken : undefined;
+	const tokenExpiry =
+		typeof raw.tokenExpiry === "number" && Number.isFinite(raw.tokenExpiry)
+			? raw.tokenExpiry
+			: undefined;
+
+	return {
+		connected,
+		accessToken,
+		refreshToken,
+		tokenExpiry,
+	};
+}
+
 export function getSettingsPath(): string {
 	const envPath = process.env.CRONOS_SETTINGS_PATH;
 	if (envPath) {
@@ -65,6 +98,7 @@ export function normalizeSettings(raw: Partial<Settings>): Settings {
 		raw.notificationLeadMinutes,
 	);
 	const themeId = normalizeThemeId(raw.themeId);
+	const google = normalizeGoogleSettings(raw.google);
 
 	return {
 		version: SETTINGS_VERSION,
@@ -72,6 +106,7 @@ export function normalizeSettings(raw: Partial<Settings>): Settings {
 		notificationsEnabled,
 		notificationLeadMinutes,
 		themeId,
+		google,
 	};
 }
 

@@ -6,6 +6,7 @@ import {
 	insertEvent,
 	updateEventById,
 } from "@db/repository";
+import { recordGoogleDeletion } from "@db/google";
 import { MAX_EVENTS } from "@lib/constants";
 import { Effect, SubscriptionRef } from "effect";
 import { createSubscriptionRef, useSubscriptionValue } from "./store";
@@ -96,6 +97,7 @@ export const addEvent = (
 			startTime,
 			endTime,
 			color,
+			updatedAt: new Date().toISOString(),
 		};
 
 		// Persist to SQLite
@@ -121,15 +123,23 @@ export const updateEvent = (
 	Effect.gen(function* () {
 		const store = yield* SubscriptionRef.get(eventStoreRef);
 		const newStore = new Map(store);
+		const nextUpdatedAt = updates.updatedAt ?? new Date().toISOString();
 
 		for (const [dateKey, events] of newStore.entries()) {
 			const eventIndex = events.findIndex((e) => e.id === eventId);
 			const event = events[eventIndex];
 			if (eventIndex !== -1 && event) {
-				const updatedEvent = { ...event, ...updates };
+				const updatedEvent = {
+					...event,
+					...updates,
+					updatedAt: nextUpdatedAt,
+				};
 
 				// Persist to SQLite
-				yield* updateEventById(eventId, updates);
+				yield* updateEventById(eventId, {
+					...updates,
+					updatedAt: nextUpdatedAt,
+				});
 
 				// If date changed, move to new date
 				if (updates.date && updates.date !== dateKey) {
@@ -170,6 +180,13 @@ export const deleteEvent = (eventId: string) =>
 		for (const [dateKey, events] of newStore.entries()) {
 			const eventIndex = events.findIndex((e) => e.id === eventId);
 			if (eventIndex !== -1) {
+				const event = events[eventIndex];
+				if (event?.googleCalendarId && event.googleEventId) {
+					yield* recordGoogleDeletion(
+						event.googleCalendarId,
+						event.googleEventId,
+					);
+				}
 				// Persist to SQLite
 				yield* deleteEventById(eventId);
 

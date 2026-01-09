@@ -38,8 +38,66 @@ const MIGRATIONS: Migration[] = [
 			`);
 		},
 	},
-	// Future migrations go here:
-	// { version: 2, up: (db) => { /* add recurring events */ } },
+	{
+		version: 2,
+		up: (db) => {
+			const eventColumns = db.query("PRAGMA table_info(events)").all() as {
+				name: string;
+			}[];
+			const eventColumnSet = new Set(eventColumns.map((col) => col.name));
+			if (!eventColumnSet.has("google_event_id")) {
+				db.run("ALTER TABLE events ADD COLUMN google_event_id TEXT");
+			}
+			if (!eventColumnSet.has("google_calendar_id")) {
+				db.run("ALTER TABLE events ADD COLUMN google_calendar_id TEXT");
+			}
+			if (!eventColumnSet.has("google_etag")) {
+				db.run("ALTER TABLE events ADD COLUMN google_etag TEXT");
+			}
+
+			db.run(`
+				CREATE TABLE IF NOT EXISTS google_calendars (
+					calendar_id TEXT PRIMARY KEY,
+					summary TEXT NOT NULL,
+					color TEXT NOT NULL DEFAULT 'gray',
+					enabled INTEGER NOT NULL DEFAULT 1,
+					can_write INTEGER NOT NULL DEFAULT 1,
+					sync_token TEXT,
+					last_sync_at TEXT,
+					updated_at TEXT DEFAULT (datetime('now'))
+				)
+			`);
+
+			db.run(`
+				CREATE TABLE IF NOT EXISTS google_event_deletions (
+					calendar_id TEXT NOT NULL,
+					event_id TEXT NOT NULL,
+					deleted_at TEXT NOT NULL,
+					PRIMARY KEY (calendar_id, event_id)
+				)
+			`);
+
+			db.run(
+				"CREATE INDEX IF NOT EXISTS idx_events_google ON events(google_calendar_id, google_event_id)",
+			);
+		},
+	},
+	{
+		version: 3,
+		up: (db) => {
+			const calendarColumns = db
+				.query("PRAGMA table_info(google_calendars)")
+				.all() as {
+				name: string;
+			}[];
+			const calendarColumnSet = new Set(calendarColumns.map((col) => col.name));
+			if (!calendarColumnSet.has("can_write")) {
+				db.run(
+					"ALTER TABLE google_calendars ADD COLUMN can_write INTEGER NOT NULL DEFAULT 1",
+				);
+			}
+		},
+	},
 ];
 
 /**

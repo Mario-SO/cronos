@@ -9,6 +9,9 @@ interface EventRow {
 	start_time: number | null;
 	end_time: number | null;
 	color: string;
+	google_event_id: string | null;
+	google_calendar_id: string | null;
+	google_etag: string | null;
 	created_at: string;
 	updated_at: string;
 }
@@ -24,6 +27,10 @@ function rowToEvent(row: EventRow): CalendarEvent {
 		startTime: row.start_time ?? undefined,
 		endTime: row.end_time ?? undefined,
 		color: row.color as ColorName,
+		googleEventId: row.google_event_id ?? undefined,
+		googleCalendarId: row.google_calendar_id ?? undefined,
+		googleEtag: row.google_etag ?? undefined,
+		updatedAt: row.updated_at ?? undefined,
 	};
 }
 
@@ -33,9 +40,21 @@ function rowToEvent(row: EventRow): CalendarEvent {
 export const insertEvent = (event: CalendarEvent) =>
 	Effect.sync(() => {
 		const db = getDatabase();
+		const now = event.updatedAt ?? new Date().toISOString();
 		const stmt = db.prepare(`
-			INSERT INTO events (id, date, title, start_time, end_time, color)
-			VALUES (?, ?, ?, ?, ?, ?)
+			INSERT INTO events (
+				id,
+				date,
+				title,
+				start_time,
+				end_time,
+				color,
+				google_event_id,
+				google_calendar_id,
+				google_etag,
+				updated_at
+			)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`);
 		stmt.run(
 			event.id,
@@ -44,6 +63,10 @@ export const insertEvent = (event: CalendarEvent) =>
 			event.startTime ?? null,
 			event.endTime ?? null,
 			event.color,
+			event.googleEventId ?? null,
+			event.googleCalendarId ?? null,
+			event.googleEtag ?? null,
+			now,
 		);
 	});
 
@@ -81,13 +104,26 @@ export const updateEventById = (
 			setClauses.push("color = ?");
 			values.push(updates.color);
 		}
+		if ("googleEventId" in updates) {
+			setClauses.push("google_event_id = ?");
+			values.push(updates.googleEventId ?? null);
+		}
+		if ("googleCalendarId" in updates) {
+			setClauses.push("google_calendar_id = ?");
+			values.push(updates.googleCalendarId ?? null);
+		}
+		if ("googleEtag" in updates) {
+			setClauses.push("google_etag = ?");
+			values.push(updates.googleEtag ?? null);
+		}
 
 		if (setClauses.length === 0) {
 			return; // Nothing to update
 		}
 
-		// Always update the updated_at timestamp
-		setClauses.push("updated_at = datetime('now')");
+		const nextUpdatedAt = updates.updatedAt ?? new Date().toISOString();
+		setClauses.push("updated_at = ?");
+		values.push(nextUpdatedAt);
 
 		const stmt = db.prepare(`
 			UPDATE events
@@ -131,6 +167,51 @@ export const findAllEvents = () =>
 		const db = getDatabase();
 		const stmt = db.prepare(
 			"SELECT * FROM events ORDER BY date ASC, start_time ASC NULLS FIRST",
+		);
+		const rows = stmt.all() as EventRow[];
+		return rows.map(rowToEvent);
+	});
+
+/**
+ * Find an event by Google calendar + event ID.
+ */
+export const findEventByGoogleId = (
+	calendarId: string,
+	googleEventId: string,
+) =>
+	Effect.sync(() => {
+		const db = getDatabase();
+		const stmt = db.prepare(
+			"SELECT * FROM events WHERE google_calendar_id = ? AND google_event_id = ?",
+		);
+		const row = stmt.get(calendarId, googleEventId) as EventRow | undefined;
+		return row ? rowToEvent(row) : null;
+	});
+
+/**
+ * Find events updated after a given ISO timestamp for a calendar.
+ */
+export const findEventsUpdatedAfter = (
+	calendarId: string,
+	updatedAfter: string,
+) =>
+	Effect.sync(() => {
+		const db = getDatabase();
+		const stmt = db.prepare(
+			"SELECT * FROM events WHERE google_calendar_id = ? AND datetime(updated_at) > datetime(?)",
+		);
+		const rows = stmt.all(calendarId, updatedAfter) as EventRow[];
+		return rows.map(rowToEvent);
+	});
+
+/**
+ * Find events without a Google event ID.
+ */
+export const findEventsMissingGoogleId = () =>
+	Effect.sync(() => {
+		const db = getDatabase();
+		const stmt = db.prepare(
+			"SELECT * FROM events WHERE google_event_id IS NULL",
 		);
 		const rows = stmt.all() as EventRow[];
 		return rows.map(rowToEvent);

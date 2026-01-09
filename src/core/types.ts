@@ -14,6 +14,10 @@ export interface CalendarEvent {
 	startTime?: number; // Minutes from midnight (0-1439)
 	endTime?: number; // Minutes from midnight (0-1439)
 	color: ColorName;
+	googleEventId?: string;
+	googleCalendarId?: string;
+	googleEtag?: string;
+	updatedAt?: string; // ISO timestamp
 }
 
 export interface CalendarState {
@@ -35,6 +39,14 @@ export interface Settings {
 	notificationsEnabled: boolean;
 	notificationLeadMinutes: number;
 	themeId: ThemeId;
+	google: GoogleSettings;
+}
+
+export interface GoogleSettings {
+	connected: boolean;
+	accessToken?: string;
+	refreshToken?: string;
+	tokenExpiry?: number; // Epoch milliseconds
 }
 
 export interface ModalState {

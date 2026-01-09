@@ -5,10 +5,18 @@ import {
 	joinHelpKeys,
 	setSettingsModalCommandHandlers,
 } from "@core/commands";
+import type { ColorName } from "@core/types";
 import { useModalDimensions } from "@hooks/useModalDimensions";
 import { closeModal } from "@state/modal";
 import { updateSettings, useSettings } from "@state/settings";
 import { getThemeOptions, setThemeId, useTheme } from "@state/theme";
+import {
+	connectGoogleAccount,
+	disconnectGoogleAccount,
+	runGoogleSync,
+	toggleGoogleCalendar,
+	useGoogleSyncState,
+} from "@state/google";
 import { Effect } from "effect";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ModalFrame } from "./ModalFrame";
@@ -16,6 +24,7 @@ import { ModalFrame } from "./ModalFrame";
 const SECTIONS = [
 	{ id: "calendar", label: "Calendar" },
 	{ id: "notifications", label: "Notifications" },
+	{ id: "sync", label: "Sync" },
 	{ id: "themes", label: "Themes" },
 ] as const;
 type SectionId = (typeof SECTIONS)[number]["id"];
@@ -28,6 +37,22 @@ const WEEK_START_OPTIONS = [
 type WeekStartOptionId = (typeof WEEK_START_OPTIONS)[number]["id"];
 type FocusArea = "fields" | "actions";
 type NotificationsField = 0 | 1 | 2;
+type GoogleOption =
+	| {
+			type: "action";
+			id: "connect" | "sync";
+			label: string;
+			disabled: boolean;
+	  }
+	| {
+			type: "calendar";
+			id: string;
+			label: string;
+			calendarId: string;
+			enabled: boolean;
+			color: ColorName;
+			canWrite: boolean;
+	  };
 
 export function SettingsModal() {
 	const { width: modalWidth, height: modalHeight } = useModalDimensions({
@@ -39,12 +64,14 @@ export function SettingsModal() {
 		maxHeightPercent: 0.8,
 	});
 	const settings = useSettings();
+	const googleState = useGoogleSyncState();
 	const theme = useTheme();
 	const ui = theme.ui;
 	const themeOptions = useMemo(() => getThemeOptions(), []);
 	const [activeSection, setActiveSection] = useState<SectionId>("calendar");
 	const [focusArea, setFocusArea] = useState<FocusArea>("fields");
 	const [actionIndex, setActionIndex] = useState(0);
+	const [googleOptionIndex, setGoogleOptionIndex] = useState(0);
 	const [draftWeekStart, setDraftWeekStart] = useState<WeekStartOptionId>(
 		settings.weekStartDay,
 	);
@@ -57,6 +84,43 @@ export function SettingsModal() {
 	);
 	const [notificationsField, setNotificationsField] =
 		useState<NotificationsField>(0);
+	const googleOptions = useMemo<GoogleOption[]>(() => {
+		const isSyncing = googleState.status === "syncing";
+		const options: GoogleOption[] = [
+			{
+				type: "action",
+				id: "connect",
+				label: settings.google.connected
+					? "Disconnect Google"
+					: "Connect Google",
+				disabled: settings.google.connected ? false : isSyncing,
+			},
+			{
+				type: "action",
+				id: "sync",
+				label: "Sync now",
+				disabled: !settings.google.connected || isSyncing,
+			},
+			...googleState.calendars.map(
+				(calendar): GoogleOption => ({
+					type: "calendar",
+					id: `calendar:${calendar.calendarId}`,
+					label: `${calendar.summary}${calendar.canWrite ? "" : " (read-only)"}`,
+					calendarId: calendar.calendarId,
+					enabled: calendar.enabled,
+					color: calendar.color,
+					canWrite: calendar.canWrite,
+				}),
+			),
+		];
+		return options;
+	}, [googleState.calendars, googleState.status, settings.google.connected]);
+
+	useEffect(() => {
+		if (googleOptionIndex >= googleOptions.length) {
+			setGoogleOptionIndex(0);
+		}
+	}, [googleOptionIndex, googleOptions.length]);
 
 	const showSections = SECTIONS.length > 1;
 	const isNarrow = modalWidth < 60;
@@ -111,6 +175,9 @@ export function SettingsModal() {
 		if (next === "notifications") {
 			setNotificationsField(0);
 		}
+		if (next === "sync") {
+			setGoogleOptionIndex(0);
+		}
 	}, [activeSection]);
 
 	const prevSection = useCallback(() => {
@@ -122,6 +189,9 @@ export function SettingsModal() {
 		setActiveSection(next);
 		if (next === "notifications") {
 			setNotificationsField(0);
+		}
+		if (next === "sync") {
+			setGoogleOptionIndex(0);
 		}
 	}, [activeSection]);
 
@@ -152,6 +222,12 @@ export function SettingsModal() {
 			}
 			return;
 		}
+		if (activeSection === "sync") {
+			const nextIndex =
+				(googleOptionIndex + 1 + googleOptions.length) % googleOptions.length;
+			setGoogleOptionIndex(nextIndex);
+			return;
+		}
 		const currentIndex = themeOptions.findIndex(
 			(option) => option.id === draftTheme,
 		);
@@ -164,6 +240,8 @@ export function SettingsModal() {
 		draftTheme,
 		draftWeekStart,
 		focusArea,
+		googleOptionIndex,
+		googleOptions.length,
 		notificationsField,
 		themeOptions,
 	]);
@@ -195,6 +273,12 @@ export function SettingsModal() {
 			}
 			return;
 		}
+		if (activeSection === "sync") {
+			const nextIndex =
+				(googleOptionIndex - 1 + googleOptions.length) % googleOptions.length;
+			setGoogleOptionIndex(nextIndex);
+			return;
+		}
 		const currentIndex = themeOptions.findIndex(
 			(option) => option.id === draftTheme,
 		);
@@ -207,6 +291,8 @@ export function SettingsModal() {
 		draftTheme,
 		draftWeekStart,
 		focusArea,
+		googleOptionIndex,
+		googleOptions.length,
 		notificationsField,
 		themeOptions,
 	]);
@@ -228,6 +314,28 @@ export function SettingsModal() {
 	}, []);
 
 	const activate = useCallback(() => {
+		if (focusArea === "fields" && activeSection === "sync") {
+			const option = googleOptions[googleOptionIndex];
+			if (!option) return;
+			if (option.type === "action") {
+				if (option.disabled) return;
+				if (option.id === "connect") {
+					if (settings.google.connected) {
+						void disconnectGoogleAccount();
+					} else {
+						void connectGoogleAccount();
+					}
+					return;
+				}
+				if (option.id === "sync") {
+					void runGoogleSync();
+					return;
+				}
+				return;
+			}
+			Effect.runSync(toggleGoogleCalendar(option.calendarId, !option.enabled));
+			return;
+		}
 		if (focusArea !== "actions") return;
 		if (actionIndex === 0) {
 			Effect.runSync(
@@ -244,12 +352,16 @@ export function SettingsModal() {
 			Effect.runSync(closeModal);
 		}
 	}, [
+		activeSection,
 		actionIndex,
 		draftNotificationsEnabled,
 		draftWeekStart,
 		focusArea,
 		normalizedNotificationMinutes,
 		draftTheme,
+		googleOptionIndex,
+		googleOptions,
+		settings.google.connected,
 	]);
 
 	useEffect(() => {
@@ -302,7 +414,9 @@ export function SettingsModal() {
 	}
 	const actionKeys = buildKeys(["modal.settings.activate"], ["Enter"]);
 	if (actionKeys) {
-		helpParts.push(`${actionKeys} Save`);
+		const label =
+			activeSection === "sync" && focusArea === "fields" ? "Action" : "Save";
+		helpParts.push(`${actionKeys} ${label}`);
 	}
 	const helpText = helpParts.join(" | ");
 
@@ -442,6 +556,69 @@ export function SettingsModal() {
 								</text>
 							</box>
 						</>
+					) : activeSection === "sync" ? (
+						<box style={{ flexDirection: "column", marginBottom: 1 }}>
+							<box style={{ flexDirection: "row", marginBottom: 1 }}>
+								<text fg={ui.foregroundDim} style={{ width: labelWidth }}>
+									Status
+								</text>
+								<text fg={ui.foreground}>
+									{settings.google.connected ? "Connected" : "Not connected"}
+									{googleState.status === "syncing" ? " (syncing)" : ""}
+								</text>
+							</box>
+							{googleState.lastSyncAt && (
+								<box style={{ flexDirection: "row", marginBottom: 1 }}>
+									<text fg={ui.foregroundDim} style={{ width: labelWidth }}>
+										Last sync
+									</text>
+									<text fg={ui.foreground}>{googleState.lastSyncAt}</text>
+								</box>
+							)}
+							{googleState.error && (
+								<text fg={ui.warning}>Error: {googleState.error}</text>
+							)}
+
+							<box style={{ flexDirection: "column", marginTop: 1 }}>
+								{googleOptions.map((option, index) => {
+									const isFocused =
+										focusArea === "fields" && index === googleOptionIndex;
+									const isAction = option.type === "action";
+									const isDisabled = isAction ? option.disabled : false;
+									const showToggle = option.type === "calendar";
+									const enabled =
+										option.type === "calendar" ? option.enabled : false;
+									const canWrite =
+										option.type === "calendar" ? option.canWrite : true;
+									const fg = isDisabled ? ui.foregroundDim : ui.foreground;
+									const labelPrefix = isFocused ? "> " : "  ";
+									const prefix = `${labelPrefix}${showToggle ? (enabled ? "(x)" : "( )") : "   "} `;
+									const dotColor =
+										option.type === "calendar"
+											? theme.eventColors[option.color]
+											: undefined;
+									return (
+										<box
+											key={option.id}
+											style={{
+												flexDirection: "row",
+												backgroundColor: isFocused ? ui.selection : undefined,
+											}}
+										>
+											<text fg={canWrite === false ? ui.foregroundDim : fg}>
+												{prefix}
+											</text>
+											<text fg={dotColor ?? ui.foregroundDim}>
+												{showToggle ? "● " : "  "}
+											</text>
+											<text fg={canWrite === false ? ui.foregroundDim : fg}>
+												{option.label}
+											</text>
+										</box>
+									);
+								})}
+							</box>
+						</box>
 					) : (
 						<box style={{ flexDirection: "column", marginBottom: 1 }}>
 							{themeOptions.map((option) => {

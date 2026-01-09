@@ -21,6 +21,16 @@ interface SearchEventsModalProps {
 	onEdit: (event: CalendarEvent) => void;
 }
 
+type SearchEntry =
+	| { type: "event"; event: CalendarEvent }
+	| {
+			type: "group";
+			title: string;
+			color: CalendarEvent["color"];
+			count: number;
+			latest: CalendarEvent;
+	  };
+
 /** Fuzzy match score - returns -1 for no match, higher score = better match */
 function fuzzyMatch(query: string, text: string): number {
 	const queryLower = query.toLowerCase();
@@ -57,6 +67,10 @@ function fuzzyMatch(query: string, text: string): number {
 	return score;
 }
 
+function getEntryEvent(entry: SearchEntry): CalendarEvent {
+	return entry.type === "group" ? entry.latest : entry.event;
+}
+
 /** Format a date for display */
 function formatEventDate(dateKey: string): string {
 	const date = parseDateKey(dateKey);
@@ -65,6 +79,43 @@ function formatEventDate(dateKey: string): string {
 		day: "numeric",
 		year: "numeric",
 	});
+}
+
+function groupEventsForSearch(events: CalendarEvent[]): SearchEntry[] {
+	const sorted = [...events].sort((a, b) => b.date.localeCompare(a.date));
+	const groups = new Map<string, CalendarEvent[]>();
+	for (const event of sorted) {
+		const key = `${event.title}::${event.color}`;
+		const current = groups.get(key) ?? [];
+		current.push(event);
+		groups.set(key, current);
+	}
+
+	const entries: SearchEntry[] = [];
+	for (const groupEvents of groups.values()) {
+		if (groupEvents.length === 1) {
+			const event = groupEvents[0];
+			if (event) entries.push({ type: "event", event });
+			continue;
+		}
+		const latest = groupEvents[0];
+		if (!latest) continue;
+		entries.push({
+			type: "group",
+			title: latest.title,
+			color: latest.color,
+			count: groupEvents.length,
+			latest,
+		});
+	}
+
+	entries.sort((a, b) => {
+		const aEvent = getEntryEvent(a);
+		const bEvent = getEntryEvent(b);
+		return bEvent.date.localeCompare(aEvent.date);
+	});
+
+	return entries;
 }
 
 export function SearchEventsModal({
@@ -100,10 +151,10 @@ export function SearchEventsModal({
 	const timeWidth = Math.max(13, Math.floor(modalWidth * 0.12)); // Time format: "2:47pm-4:28pm" ~13 chars
 
 	// Filter and sort events based on search query
-	const filteredEvents = useMemo(() => {
+	const filteredEntries = useMemo<SearchEntry[]>(() => {
 		if (searchQuery.trim() === "") {
-			// Show all events sorted by date (most recent first)
-			return [...allEvents].sort((a, b) => b.date.localeCompare(a.date));
+			// Group recurring-like events by exact title + color.
+			return groupEventsForSearch(allEvents);
 		}
 
 		// Calculate fuzzy match scores
@@ -120,62 +171,66 @@ export function SearchEventsModal({
 			return b.event.date.localeCompare(a.event.date);
 		});
 
-		return scored.map((item) => item.event);
+		return scored.map(
+			(item): SearchEntry => ({ type: "event", event: item.event }),
+		);
 	}, [allEvents, searchQuery]);
 
 	// Clamp selected index if list shrunk
 	const clampedIndex = Math.min(
 		selectedIndex,
-		Math.max(0, filteredEvents.length - 1),
+		Math.max(0, filteredEntries.length - 1),
 	);
 
 	const scrollboxRef = useRef<ScrollBoxRenderable>(null);
 
 	// Scroll to keep selected item visible
 	useEffect(() => {
-		if (scrollboxRef.current && filteredEvents.length > 0) {
+		if (scrollboxRef.current && filteredEntries.length > 0) {
 			const targetScrollTop = Math.max(0, clampedIndex - visibleEvents + 1);
 			scrollboxRef.current.scrollTop = targetScrollTop;
 		}
-	}, [clampedIndex, filteredEvents.length, visibleEvents]);
+	}, [clampedIndex, filteredEntries.length, visibleEvents]);
 
 	const moveSelection = useCallback(
 		(delta: number) => {
-			if (filteredEvents.length === 0) return;
+			if (filteredEntries.length === 0) return;
 			setSelectedIndex((prev) => {
 				const next = prev + delta;
 				if (next < 0) return 0;
-				if (next > filteredEvents.length - 1) return filteredEvents.length - 1;
+				if (next > filteredEntries.length - 1)
+					return filteredEntries.length - 1;
 				return next;
 			});
 		},
-		[filteredEvents.length],
+		[filteredEntries.length],
 	);
 
 	const goToSelection = useCallback(() => {
-		const event = filteredEvents[clampedIndex];
-		if (!event) return;
+		const entry = filteredEntries[clampedIndex];
+		if (!entry) return;
+		const event = getEntryEvent(entry);
 		const date = parseDateKey(event.date);
 		onGoToDate(date);
-	}, [clampedIndex, filteredEvents, onGoToDate]);
+	}, [clampedIndex, filteredEntries, onGoToDate]);
 
 	const editSelection = useCallback(() => {
-		const event = filteredEvents[clampedIndex];
-		if (event) {
-			onEdit(event);
-		}
-	}, [clampedIndex, filteredEvents, onEdit]);
+		const entry = filteredEntries[clampedIndex];
+		if (!entry) return;
+		onEdit(getEntryEvent(entry));
+	}, [clampedIndex, filteredEntries, onEdit]);
 
 	const deleteSelection = useCallback(() => {
-		const event = filteredEvents[clampedIndex];
-		if (!event) return;
+		const entry = filteredEntries[clampedIndex];
+		if (!entry) return;
+		const event = getEntryEvent(entry);
 
 		Effect.runSync(deleteEvent(event.id));
-		if (selectedIndex >= filteredEvents.length - 1 && selectedIndex > 0) {
+		if (selectedIndex >= filteredEntries.length - 1 && selectedIndex > 0) {
 			setSelectedIndex(selectedIndex - 1);
 		}
 		setAllEvents(Effect.runSync(getAllEvents));
-	}, [clampedIndex, filteredEvents, selectedIndex]);
+	}, [clampedIndex, filteredEntries, selectedIndex]);
 
 	const searchHandlers = useMemo(
 		() => ({ moveSelection, goToSelection, editSelection, deleteSelection }),
@@ -223,7 +278,7 @@ export function SearchEventsModal({
 		<ModalFrame width={modalWidth} height={modalHeight}>
 			{/* Title */}
 			<text fg={ui.selected} style={{ marginBottom: 1 }}>
-				Search Events
+				Search Events{searchQuery.trim() === "" ? " (grouped)" : ""}
 			</text>
 
 			{/* Search Input */}
@@ -256,7 +311,7 @@ export function SearchEventsModal({
 					overflow: "hidden",
 				}}
 			>
-				{filteredEvents.length === 0 ? (
+				{filteredEntries.length === 0 ? (
 					<text fg={ui.foregroundDim} style={{ padding: 1 }}>
 						{allEvents.length === 0 ? "No events yet" : "No matching events"}
 					</text>
@@ -266,8 +321,13 @@ export function SearchEventsModal({
 						focused={false}
 						style={{ height: visibleEvents }}
 					>
-						{filteredEvents.map((event, index) => {
+						{filteredEntries.map((entry, index) => {
+							const event = getEntryEvent(entry);
 							const isSelected = index === clampedIndex;
+							const meta =
+								entry.type === "group"
+									? `↻ x${entry.count}`
+									: formatTimeRange(event.startTime, event.endTime);
 							return (
 								<box
 									key={event.id}
@@ -289,13 +349,18 @@ export function SearchEventsModal({
 										fg={ui.foregroundDim}
 										style={{ marginLeft: 1, width: timeWidth }}
 									>
-										{formatTimeRange(event.startTime, event.endTime)}
+										{meta}
 									</text>
 									<text
 										fg={isSelected ? ui.foreground : ui.foregroundDim}
 										style={{ marginLeft: 1 }}
 									>
-										{event.title.slice(0, SEARCH_MODAL_TITLE_LENGTH)}
+										{entry.type === "group"
+											? `${entry.title} (${entry.count})`.slice(
+													0,
+													SEARCH_MODAL_TITLE_LENGTH,
+												)
+											: event.title.slice(0, SEARCH_MODAL_TITLE_LENGTH)}
 									</text>
 									{isSelected && (
 										<text fg={ui.selected} style={{ marginLeft: 1 }}>
