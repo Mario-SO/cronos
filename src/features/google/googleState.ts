@@ -63,8 +63,8 @@ export async function connectGoogleAccount(): Promise<void> {
 		})),
 	);
 	try {
-		await connectGoogle();
-		await syncGoogleNow();
+		await Effect.runPromise(connectGoogle());
+		await Effect.runPromise(syncGoogleNow());
 		const calendars = Effect.runSync(getGoogleCalendars());
 		const lastSyncAt =
 			calendars
@@ -101,7 +101,7 @@ export async function disconnectGoogleAccount(): Promise<void> {
 		})),
 	);
 	try {
-		await disconnectGoogle();
+		await Effect.runPromise(disconnectGoogle());
 	} catch {
 		// Ignore disconnect errors and clear local state anyway.
 	}
@@ -122,7 +122,7 @@ export async function runGoogleSync(): Promise<void> {
 		})),
 	);
 	try {
-		await syncGoogleNow();
+		await Effect.runPromise(syncGoogleNow());
 		const calendars = Effect.runSync(getGoogleCalendars());
 		const lastSyncAt =
 			calendars

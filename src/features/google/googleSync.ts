@@ -63,97 +63,106 @@ function isTokenExpired(settings: GoogleSettings): boolean {
 	return Date.now() >= settings.tokenExpiry - 60_000;
 }
 
-async function ensureAccessToken(): Promise<string> {
-	const settings = getSettings();
-	if (!settings.google.connected || !settings.google.accessToken) {
-		throw new Error("Google is not connected");
-	}
-	if (!isTokenExpired(settings.google)) {
-		return settings.google.accessToken;
-	}
-	const refreshed = await refreshGoogleToken(settings.google);
-	if (!refreshed.accessToken) {
-		throw new Error("Missing access token after refresh");
-	}
-	Effect.runSync(
-		updateSettings({
+const ensureAccessToken = () =>
+	Effect.gen(function* () {
+		const settings = yield* Effect.sync(() => getSettings());
+		if (!settings.google.connected || !settings.google.accessToken) {
+			return yield* Effect.fail(new Error("Google is not connected"));
+		}
+		if (!isTokenExpired(settings.google)) {
+			return settings.google.accessToken;
+		}
+		const refreshed = yield* Effect.tryPromise(() =>
+			refreshGoogleToken(settings.google),
+		);
+		if (!refreshed.accessToken) {
+			return yield* Effect.fail(
+				new Error("Missing access token after refresh"),
+			);
+		}
+		yield* updateSettings({
 			google: {
 				connected: true,
 				accessToken: refreshed.accessToken,
 				refreshToken: refreshed.refreshToken,
 				tokenExpiry: refreshed.tokenExpiry,
 			},
-		}),
-	);
-	return refreshed.accessToken;
-}
-
-async function googleRequest(
-	accessToken: string,
-	path: string,
-	options: RequestInit = {},
-	params?: Record<string, string>,
-): Promise<Response> {
-	const url = new URL(`${GOOGLE_API_BASE}${path}`);
-	if (params) {
-		for (const [key, value] of Object.entries(params)) {
-			if (value !== undefined) {
-				url.searchParams.set(key, value);
-			}
-		}
-	}
-	return fetch(url, {
-		...options,
-		headers: {
-			Authorization: `Bearer ${accessToken}`,
-			"Content-Type": "application/json",
-			...(options.headers ?? {}),
-		},
+		});
+		return refreshed.accessToken;
 	});
-}
 
-async function googleRequestWithRetry(
+const googleRequest = (
 	accessToken: string,
 	path: string,
 	options: RequestInit = {},
 	params?: Record<string, string>,
-): Promise<Response> {
-	for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-		const response = await googleRequest(accessToken, path, options, params);
-		if (
-			response.status === 429 ||
-			(response.status >= 500 && response.status < 600)
-		) {
-			if (attempt === MAX_RETRIES) {
-				return response;
+): Effect.Effect<Response, Error, never> =>
+	Effect.tryPromise(() => {
+		const url = new URL(`${GOOGLE_API_BASE}${path}`);
+		if (params) {
+			for (const [key, value] of Object.entries(params)) {
+				if (value !== undefined) {
+					url.searchParams.set(key, value);
+				}
 			}
-			const backoffMs = 500 * 2 ** attempt;
-			await new Promise((resolve) => setTimeout(resolve, backoffMs));
-			continue;
 		}
-		return response;
-	}
-	throw new Error("Retry loop failed");
-}
+		return fetch(url, {
+			...options,
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				"Content-Type": "application/json",
+				...(options.headers ?? {}),
+			},
+		});
+	});
 
-async function googleRequestJson<T>(
+const googleRequestWithRetry = (
 	accessToken: string,
 	path: string,
 	options: RequestInit = {},
 	params?: Record<string, string>,
-): Promise<{ data: T; response: Response }> {
-	const response = await googleRequestWithRetry(
-		accessToken,
-		path,
-		options,
-		params,
-	);
-	if (!response.ok) {
-		const errorText = await response.text();
-		throw new Error(`Google API error ${response.status}: ${errorText}`);
-	}
-	return { data: (await response.json()) as T, response };
-}
+): Effect.Effect<Response, Error, never> =>
+	Effect.gen(function* () {
+		for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+			const response = yield* googleRequest(accessToken, path, options, params);
+			if (
+				response.status === 429 ||
+				(response.status >= 500 && response.status < 600)
+			) {
+				if (attempt === MAX_RETRIES) {
+					return response;
+				}
+				const backoffMs = 500 * 2 ** attempt;
+				yield* Effect.sleep(backoffMs);
+				continue;
+			}
+			return response;
+		}
+		return yield* Effect.fail(new Error("Retry loop failed"));
+	});
+
+const googleRequestJson = <T>(
+	accessToken: string,
+	path: string,
+	options: RequestInit = {},
+	params?: Record<string, string>,
+): Effect.Effect<{ data: T; response: Response }, Error, never> =>
+	Effect.gen(function* () {
+		const response = yield* googleRequestWithRetry(
+			accessToken,
+			path,
+			options,
+			params,
+		);
+		if (!response.ok) {
+			const errorText = yield* Effect.tryPromise(() => response.text());
+			return yield* Effect.fail(
+				new Error(`Google API error ${response.status}: ${errorText}`),
+			);
+		}
+		const data = (yield* Effect.tryPromise(() => response.json())) as T;
+		return { data, response };
+	});
 
 function parseGoogleDate(event: GoogleEvent): string | null {
 	if (event.start?.date) return event.start.date;
@@ -223,73 +232,72 @@ function buildLocalEventFromGoogle(
 	};
 }
 
-async function fetchAllCalendars(
+const fetchAllCalendars = (
 	accessToken: string,
-): Promise<GoogleCalendarListResponse["items"]> {
-	let pageToken: string | undefined;
-	const items: GoogleCalendarListResponse["items"] = [];
+): Effect.Effect<GoogleCalendarListResponse["items"], Error, never> =>
+	Effect.gen(function* () {
+		let pageToken: string | undefined;
+		const items: GoogleCalendarListResponse["items"] = [];
 
-	do {
-		const { data } = await googleRequestJson<GoogleCalendarListResponse>(
-			accessToken,
-			"/users/me/calendarList",
-			{},
-			pageToken ? { pageToken } : undefined,
-		);
-		if (data.items) {
-			items?.push(...data.items);
-		}
-		pageToken = data.nextPageToken;
-	} while (pageToken);
+		do {
+			const { data } = yield* googleRequestJson<GoogleCalendarListResponse>(
+				accessToken,
+				"/users/me/calendarList",
+				{},
+				pageToken ? { pageToken } : undefined,
+			);
+			if (data.items) {
+				items?.push(...data.items);
+			}
+			pageToken = data.nextPageToken;
+		} while (pageToken);
 
-	return items ?? [];
-}
+		return items ?? [];
+	});
 
-export async function connectGoogle(): Promise<void> {
-	const tokens = await startGoogleOAuth();
-	Effect.runSync(
-		updateSettings({
+export const connectGoogle = () =>
+	Effect.gen(function* () {
+		const tokens = yield* Effect.tryPromise(() => startGoogleOAuth());
+		yield* updateSettings({
 			google: {
 				connected: true,
 				accessToken: tokens.accessToken,
 				refreshToken: tokens.refreshToken,
 				tokenExpiry: tokens.tokenExpiry,
 			},
-		}),
-	);
-}
+		});
+	});
 
-export async function disconnectGoogle(): Promise<void> {
-	const settings = getSettings();
-	if (!settings.google.connected) return;
-	Effect.runSync(
-		updateSettings({
+export const disconnectGoogle = () =>
+	Effect.gen(function* () {
+		const settings = yield* Effect.sync(() => getSettings());
+		if (!settings.google.connected) return;
+		yield* updateSettings({
 			google: {
 				connected: false,
 				accessToken: undefined,
 				refreshToken: undefined,
 				tokenExpiry: undefined,
 			},
-		}),
-	);
-}
+		});
+	});
 
-async function refreshCalendars(accessToken: string): Promise<void> {
-	const existing = Effect.runSync(getGoogleCalendars());
-	const existingMap = new Map(
-		existing.map((calendar) => [calendar.calendarId, calendar]),
-	);
-	const incoming = await fetchAllCalendars(accessToken);
-	let newIndex = existing.length;
+const refreshCalendars = (accessToken: string) =>
+	Effect.gen(function* () {
+		const existing = yield* getGoogleCalendars();
+		const existingMap = new Map(
+			existing.map((calendar) => [calendar.calendarId, calendar]),
+		);
+		const incoming = yield* fetchAllCalendars(accessToken);
+		let newIndex = existing.length;
 
-	for (const calendar of incoming ?? []) {
-		if (!calendar.id) continue;
-		const existingCalendar = existingMap.get(calendar.id);
-		const canWrite = canWriteCalendar(calendar.accessRole);
-		const color = existingCalendar?.color ?? getColorByIndex(newIndex++);
-		const enabled = existingCalendar?.enabled ?? !!canWrite;
-		Effect.runSync(
-			upsertGoogleCalendar({
+		for (const calendar of incoming ?? []) {
+			if (!calendar.id) continue;
+			const existingCalendar = existingMap.get(calendar.id);
+			const canWrite = canWriteCalendar(calendar.accessRole);
+			const color = existingCalendar?.color ?? getColorByIndex(newIndex++);
+			const enabled = existingCalendar?.enabled ?? !!canWrite;
+			yield* upsertGoogleCalendar({
 				calendarId: calendar.id,
 				summary: calendar.summary ?? "Untitled",
 				color,
@@ -297,330 +305,353 @@ async function refreshCalendars(accessToken: string): Promise<void> {
 				canWrite,
 				syncToken: existingCalendar?.syncToken,
 				lastSyncAt: existingCalendar?.lastSyncAt,
-			}),
-		);
-	}
-}
+			});
+		}
+	});
 
-async function listGoogleEvents(
+const listGoogleEvents = (
 	accessToken: string,
 	calendarId: string,
 	syncToken?: string | null,
 	pageToken?: string,
-): Promise<GoogleEventListResponse & { syncTokenExpired?: boolean }> {
-	const { timeMin, timeMax } = getSyncWindowBounds();
-	const params: Record<string, string> = {
-		singleEvents: "true",
-		maxResults: `${MAX_RESULTS}`,
-		showDeleted: "true",
-	};
-	if (syncToken) {
-		params.syncToken = syncToken;
-	} else {
-		params.timeMin = timeMin;
-		params.timeMax = timeMax;
-	}
-	if (pageToken) params.pageToken = pageToken;
+): Effect.Effect<
+	GoogleEventListResponse & { syncTokenExpired?: boolean },
+	Error,
+	never
+> =>
+	Effect.gen(function* () {
+		const { timeMin, timeMax } = getSyncWindowBounds();
+		const params: Record<string, string> = {
+			singleEvents: "true",
+			maxResults: `${MAX_RESULTS}`,
+			showDeleted: "true",
+		};
+		if (syncToken) {
+			params.syncToken = syncToken;
+		} else {
+			params.timeMin = timeMin;
+			params.timeMax = timeMax;
+		}
+		if (pageToken) params.pageToken = pageToken;
 
-	const response = await googleRequestWithRetry(
-		accessToken,
-		`/calendars/${encodeURIComponent(calendarId)}/events`,
-		{ method: "GET" },
-		params,
-	);
+		const response = yield* googleRequestWithRetry(
+			accessToken,
+			`/calendars/${encodeURIComponent(calendarId)}/events`,
+			{ method: "GET" },
+			params,
+		);
 
-	if (response.status === 410) {
-		return { items: [], syncTokenExpired: true };
-	}
-	if (!response.ok) {
-		const errorText = await response.text();
-		throw new Error(`Events list failed ${response.status}: ${errorText}`);
-	}
-	return (await response.json()) as GoogleEventListResponse;
-}
+		if (response.status === 410) {
+			return { items: [], syncTokenExpired: true };
+		}
+		if (!response.ok) {
+			const errorText = yield* Effect.tryPromise(() => response.text());
+			return yield* Effect.fail(
+				new Error(`Events list failed ${response.status}: ${errorText}`),
+			);
+		}
+		return (yield* Effect.tryPromise(() => response.json())) as
+			| GoogleEventListResponse
+			| (GoogleEventListResponse & { syncTokenExpired?: boolean });
+	});
 
-async function createGoogleEvent(
+const createGoogleEvent = (
 	accessToken: string,
 	calendarId: string,
 	event: CalendarEvent,
-): Promise<{ id: string; etag?: string; updated?: string }> {
-	const body = toGoogleAllDayEvent(event);
-	const { data } = await googleRequestJson<GoogleEvent>(
-		accessToken,
-		`/calendars/${encodeURIComponent(calendarId)}/events`,
-		{
-			method: "POST",
-			body: JSON.stringify(body),
-		},
-	);
-	return {
-		id: data.id,
-		etag: data.etag ?? undefined,
-		updated: data.updated,
-	};
-}
+): Effect.Effect<
+	{ id: string; etag?: string; updated?: string },
+	Error,
+	never
+> =>
+	Effect.gen(function* () {
+		const body = toGoogleAllDayEvent(event);
+		const { data } = yield* googleRequestJson<GoogleEvent>(
+			accessToken,
+			`/calendars/${encodeURIComponent(calendarId)}/events`,
+			{
+				method: "POST",
+				body: JSON.stringify(body),
+			},
+		);
+		return {
+			id: data.id,
+			etag: data.etag ?? undefined,
+			updated: data.updated,
+		};
+	});
 
-async function updateGoogleEvent(
+const updateGoogleEvent = (
 	accessToken: string,
 	calendarId: string,
 	googleEventId: string,
 	event: CalendarEvent,
-): Promise<{ etag?: string; updated?: string }> {
-	const body = toGoogleAllDayEvent(event);
-	const { data } = await googleRequestJson<GoogleEvent>(
-		accessToken,
-		`/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(
-			googleEventId,
-		)}`,
-		{
-			method: "PATCH",
-			body: JSON.stringify(body),
-		},
-	);
-	return {
-		etag: data.etag ?? undefined,
-		updated: data.updated,
-	};
-}
+): Effect.Effect<{ etag?: string; updated?: string }, Error, never> =>
+	Effect.gen(function* () {
+		const body = toGoogleAllDayEvent(event);
+		const { data } = yield* googleRequestJson<GoogleEvent>(
+			accessToken,
+			`/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(
+				googleEventId,
+			)}`,
+			{
+				method: "PATCH",
+				body: JSON.stringify(body),
+			},
+		);
+		return {
+			etag: data.etag ?? undefined,
+			updated: data.updated,
+		};
+	});
 
-async function deleteGoogleEvent(
+const deleteGoogleEvent = (
 	accessToken: string,
 	calendarId: string,
 	googleEventId: string,
-): Promise<void> {
-	const response = await googleRequestWithRetry(
-		accessToken,
-		`/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(
-			googleEventId,
-		)}`,
-		{ method: "DELETE" },
-	);
-	if (response.status === 404) return;
-	if (!response.ok) {
-		const errorText = await response.text();
-		throw new Error(`Delete failed ${response.status}: ${errorText}`);
-	}
-}
+): Effect.Effect<void, Error, never> =>
+	Effect.gen(function* () {
+		const response = yield* googleRequestWithRetry(
+			accessToken,
+			`/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(
+				googleEventId,
+			)}`,
+			{ method: "DELETE" },
+		);
+		if (response.status === 404) return;
+		if (!response.ok) {
+			const errorText = yield* Effect.tryPromise(() => response.text());
+			return yield* Effect.fail(
+				new Error(`Delete failed ${response.status}: ${errorText}`),
+			);
+		}
+	});
 
-async function syncCalendar(
+const syncCalendar = (
 	accessToken: string,
 	calendarId: string,
 	color: CalendarEvent["color"],
 	canWrite: boolean,
 	syncToken?: string | null,
 	lastSyncAt?: string | null,
-): Promise<{ syncToken?: string | null; lastSyncAt?: string | null }> {
-	let pageToken: string | undefined;
-	let nextSyncToken: string | null | undefined;
-	let activeSyncToken = canWrite ? (syncToken ?? null) : null;
-	const touchedLocalIds = new Set<string>();
-	const localCounterStart = await Effect.runSync(getMaxEventIdCounter());
-	let localCounter = localCounterStart;
+): Effect.Effect<
+	{ syncToken?: string | null; lastSyncAt?: string | null },
+	Error,
+	never
+> =>
+	Effect.gen(function* () {
+		let pageToken: string | undefined;
+		let nextSyncToken: string | null | undefined;
+		let activeSyncToken = canWrite ? (syncToken ?? null) : null;
+		const touchedLocalIds = new Set<string>();
+		const localCounterStart = yield* getMaxEventIdCounter();
+		let localCounter = localCounterStart;
 
-	const processEvent = async (event: GoogleEvent) => {
-		const local = Effect.runSync(findEventByGoogleId(calendarId, event.id));
-		const remoteUpdatedAt = toIso(event.updated);
+		const processEvent = (event: GoogleEvent) =>
+			Effect.gen(function* () {
+				const local = yield* findEventByGoogleId(calendarId, event.id);
+				const remoteUpdatedAt = toIso(event.updated);
 
-		if (event.status === "cancelled") {
-			Effect.runSync(clearGoogleDeletion(calendarId, event.id));
-			if (!local) return;
-			if (!isDateInSyncWindow(local.date)) return;
-			const localUpdated = local.updatedAt;
-			if (canWrite && compareTimestamps(localUpdated, remoteUpdatedAt) > 0) {
-				const created = await createGoogleEvent(accessToken, calendarId, local);
-				Effect.runSync(
-					updateEventById(local.id, {
-						googleEventId: created.id,
-						googleCalendarId: calendarId,
-						googleEtag: created.etag,
-						updatedAt: toIso(created.updated) ?? local.updatedAt,
-					}),
-				);
+				if (event.status === "cancelled") {
+					yield* clearGoogleDeletion(calendarId, event.id);
+					if (!local) return;
+					if (!isDateInSyncWindow(local.date)) return;
+					const localUpdated = local.updatedAt;
+					if (
+						canWrite &&
+						compareTimestamps(localUpdated, remoteUpdatedAt) > 0
+					) {
+						const created = yield* createGoogleEvent(
+							accessToken,
+							calendarId,
+							local,
+						);
+						yield* updateEventById(local.id, {
+							googleEventId: created.id,
+							googleCalendarId: calendarId,
+							googleEtag: created.etag,
+							updatedAt: toIso(created.updated) ?? local.updatedAt,
+						});
+						touchedLocalIds.add(local.id);
+						return;
+					}
+					yield* deleteEventById(local.id);
+					touchedLocalIds.add(local.id);
+					return;
+				}
+
+				const mapped = buildLocalEventFromGoogle(event, calendarId, color);
+				if (!mapped) return;
+				if (!isDateInSyncWindow(mapped.date)) {
+					if (local) {
+						yield* deleteEventById(local.id);
+					}
+					return;
+				}
+
+				if (!local) {
+					localCounter += 1;
+					const newEvent: CalendarEvent = {
+						...mapped,
+						id: `event-${localCounter}-${Date.now()}`,
+					};
+					yield* insertEvent(newEvent);
+					touchedLocalIds.add(newEvent.id);
+					return;
+				}
+
+				const comparison = compareTimestamps(local.updatedAt, mapped.updatedAt);
+				if (comparison > 0 && canWrite) {
+					const updated = yield* updateGoogleEvent(
+						accessToken,
+						calendarId,
+						event.id,
+						local,
+					);
+					yield* updateEventById(local.id, {
+						googleEtag: updated.etag,
+						updatedAt: toIso(updated.updated) ?? local.updatedAt,
+					});
+					touchedLocalIds.add(local.id);
+					return;
+				}
+
+				yield* updateEventById(local.id, {
+					date: mapped.date,
+					title: mapped.title,
+					color: mapped.color,
+					googleEtag: mapped.googleEtag,
+					updatedAt: mapped.updatedAt,
+				});
 				touchedLocalIds.add(local.id);
-				return;
-			}
-			Effect.runSync(deleteEventById(local.id));
-			touchedLocalIds.add(local.id);
-			return;
-		}
+			});
 
-		const mapped = buildLocalEventFromGoogle(event, calendarId, color);
-		if (!mapped) return;
-		if (!isDateInSyncWindow(mapped.date)) {
-			if (local) {
-				Effect.runSync(deleteEventById(local.id));
-			}
-			return;
-		}
-
-		if (!local) {
-			localCounter += 1;
-			const newEvent: CalendarEvent = {
-				...mapped,
-				id: `event-${localCounter}-${Date.now()}`,
-			};
-			Effect.runSync(insertEvent(newEvent));
-			touchedLocalIds.add(newEvent.id);
-			return;
-		}
-
-		const comparison = compareTimestamps(local.updatedAt, mapped.updatedAt);
-		if (comparison > 0 && canWrite) {
-			const updated = await updateGoogleEvent(
+		while (true) {
+			const response = yield* listGoogleEvents(
 				accessToken,
 				calendarId,
-				event.id,
-				local,
+				activeSyncToken,
+				pageToken,
 			);
-			Effect.runSync(
-				updateEventById(local.id, {
-					googleEtag: updated.etag,
-					updatedAt: toIso(updated.updated) ?? local.updatedAt,
-				}),
-			);
-			touchedLocalIds.add(local.id);
-			return;
+			if (response.syncTokenExpired) {
+				activeSyncToken = null;
+				pageToken = undefined;
+				continue;
+			}
+			const items = response.items ?? [];
+			for (const event of items) {
+				yield* processEvent(event);
+			}
+			pageToken = response.nextPageToken;
+			if (!pageToken && response.nextSyncToken) {
+				nextSyncToken = response.nextSyncToken;
+			}
+			if (!pageToken) break;
 		}
 
-		Effect.runSync(
-			updateEventById(local.id, {
-				date: mapped.date,
-				title: mapped.title,
-				color: mapped.color,
-				googleEtag: mapped.googleEtag,
-				updatedAt: mapped.updatedAt,
-			}),
-		);
-		touchedLocalIds.add(local.id);
-	};
-
-	while (true) {
-		const response = await listGoogleEvents(
-			accessToken,
+		const effectiveLastSyncAt = lastSyncAt ?? new Date(0).toISOString();
+		const localChanges = yield* findEventsUpdatedAfter(
 			calendarId,
-			activeSyncToken,
-			pageToken,
+			effectiveLastSyncAt,
 		);
-		if (response.syncTokenExpired) {
-			activeSyncToken = null;
-			pageToken = undefined;
-			continue;
-		}
-		const items = response.items ?? [];
-		for (const event of items) {
-			await processEvent(event);
-		}
-		pageToken = response.nextPageToken;
-		if (!pageToken && response.nextSyncToken) {
-			nextSyncToken = response.nextSyncToken;
-		}
-		if (!pageToken) break;
-	}
-
-	const effectiveLastSyncAt = lastSyncAt ?? new Date(0).toISOString();
-	const localChanges = Effect.runSync(
-		findEventsUpdatedAfter(calendarId, effectiveLastSyncAt),
-	);
-	if (canWrite) {
-		for (const event of localChanges) {
-			if (!event.googleEventId) continue;
-			if (touchedLocalIds.has(event.id)) continue;
-			if (!isDateInSyncWindow(event.date)) continue;
-			const updated = await updateGoogleEvent(
-				accessToken,
-				calendarId,
-				event.googleEventId,
-				event,
-			);
-			Effect.runSync(
-				updateEventById(event.id, {
+		if (canWrite) {
+			for (const event of localChanges) {
+				if (!event.googleEventId) continue;
+				if (touchedLocalIds.has(event.id)) continue;
+				if (!isDateInSyncWindow(event.date)) continue;
+				const updated = yield* updateGoogleEvent(
+					accessToken,
+					calendarId,
+					event.googleEventId,
+					event,
+				);
+				yield* updateEventById(event.id, {
 					googleEtag: updated.etag,
 					updatedAt: toIso(updated.updated) ?? event.updatedAt,
-				}),
-			);
+				});
+			}
 		}
-	}
 
-	return {
-		syncToken: canWrite ? (nextSyncToken ?? activeSyncToken ?? null) : null,
-		lastSyncAt: new Date().toISOString(),
-	};
-}
+		return {
+			syncToken: canWrite ? (nextSyncToken ?? activeSyncToken ?? null) : null,
+			lastSyncAt: new Date().toISOString(),
+		};
+	});
 
-async function syncLocalCreations(accessToken: string): Promise<void> {
-	const calendars = Effect.runSync(getEnabledGoogleCalendars()).filter(
-		(calendar) => calendar.canWrite,
-	);
-	if (calendars.length === 0) return;
-	const calendarsByColor = new Map(
-		calendars.map((calendar) => [calendar.color, calendar]),
-	);
-	const fallbackCalendar = calendars[0];
-	const localEvents = Effect.runSync(findEventsMissingGoogleId());
-
-	for (const event of localEvents) {
-		if (!isDateInSyncWindow(event.date)) continue;
-		const calendar = calendarsByColor.get(event.color) ?? fallbackCalendar;
-		if (!calendar) continue;
-		const created = await createGoogleEvent(
-			accessToken,
-			calendar.calendarId,
-			event,
+const syncLocalCreations = (accessToken: string) =>
+	Effect.gen(function* () {
+		const calendars = (yield* getEnabledGoogleCalendars()).filter(
+			(calendar) => calendar.canWrite,
 		);
-		Effect.runSync(
-			updateEventById(event.id, {
+		if (calendars.length === 0) return;
+		const calendarsByColor = new Map(
+			calendars.map((calendar) => [calendar.color, calendar]),
+		);
+		const fallbackCalendar = calendars[0];
+		const localEvents = yield* findEventsMissingGoogleId();
+
+		for (const event of localEvents) {
+			if (!isDateInSyncWindow(event.date)) continue;
+			const calendar = calendarsByColor.get(event.color) ?? fallbackCalendar;
+			if (!calendar) continue;
+			const created = yield* createGoogleEvent(
+				accessToken,
+				calendar.calendarId,
+				event,
+			);
+			yield* updateEventById(event.id, {
 				googleEventId: created.id,
 				googleCalendarId: calendar.calendarId,
 				googleEtag: created.etag,
 				color: calendar.color,
 				updatedAt: toIso(created.updated) ?? event.updatedAt,
-			}),
-		);
-	}
-}
+			});
+		}
+	});
 
-async function syncDeletions(
+const syncDeletions = (
 	accessToken: string,
 	calendarId: string,
-): Promise<void> {
-	const deletions = Effect.runSync(getGoogleDeletions(calendarId));
-	for (const deletion of deletions) {
-		try {
-			await deleteGoogleEvent(accessToken, calendarId, deletion.event_id);
-		} catch {
-			continue;
+): Effect.Effect<void, Error, never> =>
+	Effect.gen(function* () {
+		const deletions = yield* getGoogleDeletions(calendarId);
+		for (const deletion of deletions) {
+			const result = yield* Effect.either(
+				deleteGoogleEvent(accessToken, calendarId, deletion.event_id),
+			);
+			if (result._tag === "Left") {
+				continue;
+			}
+			yield* clearGoogleDeletion(calendarId, deletion.event_id);
 		}
-		Effect.runSync(clearGoogleDeletion(calendarId, deletion.event_id));
-	}
-}
+	});
 
-export async function syncGoogleNow(): Promise<void> {
-	const accessToken = await ensureAccessToken();
-	await refreshCalendars(accessToken);
-	const calendars = Effect.runSync(getGoogleCalendars());
+export const syncGoogleNow = () =>
+	Effect.gen(function* () {
+		const accessToken = yield* ensureAccessToken();
+		yield* refreshCalendars(accessToken);
+		const calendars = yield* getGoogleCalendars();
 
-	for (const calendar of calendars) {
-		if (!calendar.enabled) continue;
-		if (calendar.canWrite) {
-			await syncDeletions(accessToken, calendar.calendarId);
-		}
-		const result = await syncCalendar(
-			accessToken,
-			calendar.calendarId,
-			calendar.color,
-			calendar.canWrite,
-			calendar.syncToken ?? null,
-			calendar.lastSyncAt ?? null,
-		);
-		Effect.runSync(
-			updateGoogleCalendarSyncState(
+		for (const calendar of calendars) {
+			if (!calendar.enabled) continue;
+			if (calendar.canWrite) {
+				yield* syncDeletions(accessToken, calendar.calendarId);
+			}
+			const result = yield* syncCalendar(
+				accessToken,
+				calendar.calendarId,
+				calendar.color,
+				calendar.canWrite,
+				calendar.syncToken ?? null,
+				calendar.lastSyncAt ?? null,
+			);
+			yield* updateGoogleCalendarSyncState(
 				calendar.calendarId,
 				result.syncToken ?? null,
 				result.lastSyncAt ?? null,
-			),
-		);
-	}
+			);
+		}
 
-	await syncLocalCreations(accessToken);
-	Effect.runSync(initEventStore);
-}
+		yield* syncLocalCreations(accessToken);
+		yield* initEventStore;
+	});
