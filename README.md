@@ -28,16 +28,29 @@ bun dev
 | `s` | Search events |
 | `q` | Quit |
 
+## Google Calendar Sync (preview)
+
+Requires an OAuth client for an installed app.
+
+```bash
+export CRONOS_GOOGLE_CLIENT_ID="your-client-id"
+# Optional when using PKCE, required if your client has a secret
+export CRONOS_GOOGLE_CLIENT_SECRET="your-client-secret"
+```
+
+Open Settings (` , `) → Sync → Connect Google. Calendars map to colors, and
+events import as all-day entries for now.
+
 ## Adding a Shortcut
 
 This is the full flow for adding a new shortcut and its behavior end-to-end.
 
 1. **Add the command definition**
-   - Add a new entry in the relevant module under `src/core/commands/`.
+   - Add a new entry in the relevant module under `src/features/*/*Commands.ts`.
    - Include `id`, `title`, `keys`, `layers`, and `run`.
 2. **Pick a layer**
-   - Use an existing layer (`global`, `agenda`, `modal:add`, `modal:goto`, `modal:search`) in `layers`.
-   - If you need a new context, add a new layer in `src/core/commands/keymap.ts`.
+   - Use an existing layer (`global`, `agenda`, `modal:add`, `modal:goto`, `modal:search`, `modal:settings`) in `layers`.
+   - If you need a new context, add a new layer in `src/app/commands/keymap.ts`.
 3. **Wire UI handlers (if needed)**
    - For view-local behavior, register handlers in the component via `set...CommandHandlers`.
 4. **Update docs**
@@ -46,7 +59,7 @@ This is the full flow for adding a new shortcut and its behavior end-to-end.
 Example (add `n` to jump to next year):
 
 ```ts
-// src/core/commands/calendar.ts
+// src/features/calendar/calendarCommands.ts
 export const calendarCommands = [
   // ...
   {

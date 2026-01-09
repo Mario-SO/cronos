@@ -15,7 +15,7 @@ import {
 	isValidDate,
 	parseDateKey,
 	parseMonthAbbrev,
-} from "../src/lib/dateUtils";
+} from "@shared/dateUtils";
 
 describe("getDaysInMonth", () => {
 	test("returns 31 for January", () => {
