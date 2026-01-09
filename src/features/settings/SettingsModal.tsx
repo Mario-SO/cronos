@@ -59,10 +59,20 @@ export function SettingsModal() {
 	const [focusArea, setFocusArea] = useState<FocusArea>("fields");
 	const [actionIndex, setActionIndex] = useState(0);
 	const [googleOptionIndex, setGoogleOptionIndex] = useState(0);
+	const [weekStartIndex, setWeekStartIndex] = useState(() => {
+		const index = WEEK_START_OPTIONS.findIndex(
+			(option) => option.id === settings.weekStartDay,
+		);
+		return index >= 0 ? index : 0;
+	});
 	const [draftWeekStart, setDraftWeekStart] = useState<WeekStartOptionId>(
 		settings.weekStartDay,
 	);
 	const [draftTheme, setDraftTheme] = useState(settings.themeId);
+	const [themeOptionIndex, setThemeOptionIndex] = useState(() => {
+		const index = themeOptions.findIndex((option) => option.id === settings.themeId);
+		return index >= 0 ? index : 0;
+	});
 	const [draftNotificationsEnabled, setDraftNotificationsEnabled] = useState(
 		settings.notificationsEnabled,
 	);
@@ -118,6 +128,14 @@ export function SettingsModal() {
 	useEffect(() => {
 		setDraftWeekStart(settings.weekStartDay);
 		setDraftTheme(settings.themeId);
+		const nextWeekStartIndex = WEEK_START_OPTIONS.findIndex(
+			(option) => option.id === settings.weekStartDay,
+		);
+		setWeekStartIndex(nextWeekStartIndex >= 0 ? nextWeekStartIndex : 0);
+		const nextThemeIndex = themeOptions.findIndex(
+			(option) => option.id === settings.themeId,
+		);
+		setThemeOptionIndex(nextThemeIndex >= 0 ? nextThemeIndex : 0);
 		setDraftNotificationsEnabled(settings.notificationsEnabled);
 		setDraftNotificationMinutes(String(settings.notificationLeadMinutes));
 	}, [
@@ -125,6 +143,7 @@ export function SettingsModal() {
 		settings.notificationsEnabled,
 		settings.themeId,
 		settings.weekStartDay,
+		themeOptions,
 	]);
 
 	const parsedNotificationMinutes = Number.parseInt(
@@ -190,24 +209,15 @@ export function SettingsModal() {
 		}
 		if (focusArea !== "fields") return;
 		if (activeSection === "calendar") {
-			const currentIndex = WEEK_START_OPTIONS.findIndex(
-				(option) => option.id === draftWeekStart,
-			);
 			const nextIndex =
-				(currentIndex + 1 + WEEK_START_OPTIONS.length) %
+				(weekStartIndex + 1 + WEEK_START_OPTIONS.length) %
 				WEEK_START_OPTIONS.length;
-			const next = WEEK_START_OPTIONS[nextIndex]?.id;
-			if (next) setDraftWeekStart(next);
+			setWeekStartIndex(nextIndex);
 			return;
 		}
 		if (activeSection === "notifications") {
 			const nextIndex = (notificationsField + 1 + 3) % 3;
 			setNotificationsField(nextIndex as NotificationsField);
-			if (nextIndex === 0) {
-				setDraftNotificationsEnabled(true);
-			} else if (nextIndex === 1) {
-				setDraftNotificationsEnabled(false);
-			}
 			return;
 		}
 		if (activeSection === "sync") {
@@ -216,22 +226,18 @@ export function SettingsModal() {
 			setGoogleOptionIndex(nextIndex);
 			return;
 		}
-		const currentIndex = themeOptions.findIndex(
-			(option) => option.id === draftTheme,
-		);
 		const nextIndex =
-			(currentIndex + 1 + themeOptions.length) % themeOptions.length;
-		const next = themeOptions[nextIndex]?.id ?? themeOptions[0]?.id;
-		if (next) setDraftTheme(next);
+			(themeOptionIndex + 1 + themeOptions.length) % themeOptions.length;
+		setThemeOptionIndex(nextIndex);
 	}, [
 		activeSection,
-		draftTheme,
-		draftWeekStart,
 		focusArea,
 		googleOptionIndex,
 		googleOptions.length,
 		notificationsField,
+		themeOptionIndex,
 		themeOptions,
+		weekStartIndex,
 	]);
 
 	const prevOption = useCallback(() => {
@@ -241,24 +247,15 @@ export function SettingsModal() {
 		}
 		if (focusArea !== "fields") return;
 		if (activeSection === "calendar") {
-			const currentIndex = WEEK_START_OPTIONS.findIndex(
-				(option) => option.id === draftWeekStart,
-			);
 			const nextIndex =
-				(currentIndex - 1 + WEEK_START_OPTIONS.length) %
+				(weekStartIndex - 1 + WEEK_START_OPTIONS.length) %
 				WEEK_START_OPTIONS.length;
-			const next = WEEK_START_OPTIONS[nextIndex]?.id;
-			if (next) setDraftWeekStart(next);
+			setWeekStartIndex(nextIndex);
 			return;
 		}
 		if (activeSection === "notifications") {
 			const nextIndex = (notificationsField - 1 + 3) % 3;
 			setNotificationsField(nextIndex as NotificationsField);
-			if (nextIndex === 0) {
-				setDraftNotificationsEnabled(true);
-			} else if (nextIndex === 1) {
-				setDraftNotificationsEnabled(false);
-			}
 			return;
 		}
 		if (activeSection === "sync") {
@@ -267,22 +264,18 @@ export function SettingsModal() {
 			setGoogleOptionIndex(nextIndex);
 			return;
 		}
-		const currentIndex = themeOptions.findIndex(
-			(option) => option.id === draftTheme,
-		);
 		const nextIndex =
-			(currentIndex - 1 + themeOptions.length) % themeOptions.length;
-		const next = themeOptions[nextIndex]?.id ?? themeOptions[0]?.id;
-		if (next) setDraftTheme(next);
+			(themeOptionIndex - 1 + themeOptions.length) % themeOptions.length;
+		setThemeOptionIndex(nextIndex);
 	}, [
 		activeSection,
-		draftTheme,
-		draftWeekStart,
 		focusArea,
 		googleOptionIndex,
 		googleOptions.length,
 		notificationsField,
+		themeOptionIndex,
 		themeOptions,
+		weekStartIndex,
 	]);
 
 	const focusNextArea = useCallback(() => {
@@ -324,6 +317,24 @@ export function SettingsModal() {
 			Effect.runSync(toggleGoogleCalendar(option.calendarId, !option.enabled));
 			return;
 		}
+		if (focusArea === "fields" && activeSection === "calendar") {
+			const next = WEEK_START_OPTIONS[weekStartIndex]?.id;
+			if (next) setDraftWeekStart(next);
+			return;
+		}
+		if (focusArea === "fields" && activeSection === "notifications") {
+			if (notificationsField === 0) {
+				setDraftNotificationsEnabled(true);
+			} else if (notificationsField === 1) {
+				setDraftNotificationsEnabled(false);
+			}
+			return;
+		}
+		if (focusArea === "fields" && activeSection === "themes") {
+			const next = themeOptions[themeOptionIndex]?.id;
+			if (next) setDraftTheme(next);
+			return;
+		}
 		if (focusArea !== "actions") return;
 		if (actionIndex === 0) {
 			Effect.runSync(
@@ -349,7 +360,11 @@ export function SettingsModal() {
 		draftTheme,
 		googleOptionIndex,
 		googleOptions,
+		notificationsField,
 		settings.google.connected,
+		themeOptionIndex,
+		themeOptions,
+		weekStartIndex,
 	]);
 
 	useEffect(() => {
@@ -374,7 +389,11 @@ export function SettingsModal() {
 	]);
 
 	const actionLabel =
-		activeSection === "sync" && focusArea === "fields" ? "Action" : "Save";
+		focusArea === "fields" && activeSection === "sync"
+			? "Action"
+			: focusArea === "fields"
+				? "Select"
+				: "Save";
 	const helpText = buildHelpText(
 		["modal:settings"],
 		[
@@ -461,6 +480,7 @@ export function SettingsModal() {
 							ui={ui}
 							focusArea={focusArea}
 							draftWeekStart={draftWeekStart}
+							weekStartIndex={weekStartIndex}
 							weekStartOptions={WEEK_START_OPTIONS}
 							labelWidth={labelWidth}
 							appliedWeekStartLabel={appliedWeekStartLabel}
@@ -493,6 +513,7 @@ export function SettingsModal() {
 							ui={ui}
 							focusArea={focusArea}
 							draftTheme={draftTheme}
+							themeOptionIndex={themeOptionIndex}
 							themeOptions={themeOptions}
 						/>
 					)}

@@ -10,6 +10,7 @@ interface CalendarSectionProps {
 	ui: ThemeUi;
 	focusArea: FocusArea;
 	draftWeekStart: WeekStartOptionId;
+	weekStartIndex: number;
 	weekStartOptions: ReadonlyArray<WeekStartOption>;
 	labelWidth: number;
 	appliedWeekStartLabel: string;
@@ -19,6 +20,7 @@ export function CalendarSection({
 	ui,
 	focusArea,
 	draftWeekStart,
+	weekStartIndex,
 	weekStartOptions,
 	labelWidth,
 	appliedWeekStartLabel,
@@ -30,10 +32,10 @@ export function CalendarSection({
 					Week start
 				</text>
 				<box style={{ flexDirection: "column" }}>
-					{weekStartOptions.map((option) => {
+					{weekStartOptions.map((option, index) => {
 						const isSelected = option.id === draftWeekStart;
 						const fg = isSelected ? ui.selected : ui.foreground;
-						const isFocused = focusArea === "fields" && isSelected;
+						const isFocused = focusArea === "fields" && index === weekStartIndex;
 						return (
 							<box
 								key={option.id}
