@@ -1,5 +1,5 @@
-import type { CalendarEvent } from "@shared/types";
 import { formatTimeRange } from "@shared/dateUtils";
+import type { CalendarEvent } from "@shared/types";
 
 export function formatEventLine(event: CalendarEvent): string {
 	const time = formatTimeRange(event.startTime, event.endTime);

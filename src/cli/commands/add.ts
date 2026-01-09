@@ -1,8 +1,8 @@
-import { Effect } from "effect";
-import { addEvent } from "@features/events/eventsState";
 import { parseEventInput } from "@features/events/eventParser";
-import { parseDateValue } from "../parse";
+import { addEvent } from "@features/events/eventsState";
+import { Effect } from "effect";
 import { formatEventLine } from "../format";
+import { parseDateValue } from "../parse";
 
 interface AddOptions {
 	date?: string;

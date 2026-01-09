@@ -1,6 +1,6 @@
+import { getAllEvents } from "@features/events/eventsState";
 import type { CalendarEvent } from "@shared/types";
 import { Effect } from "effect";
-import { getAllEvents } from "@features/events/eventsState";
 import { formatEventLine } from "../format";
 import { parseDateValue } from "../parse";
 

@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
-import { initDatabase, closeDatabase } from "@data/db";
+import { closeDatabase, initDatabase } from "@data/db";
 import { initEventStore } from "@features/events/eventsState";
 import { Effect } from "effect";
 import { runAdd } from "./commands/add";
 import { runDelete } from "./commands/delete";
 import { runList } from "./commands/list";
+import { runNext } from "./commands/next";
 import { printHelp } from "./help";
 import { parseArgs } from "./parse";
 
@@ -45,6 +46,10 @@ async function run(): Promise<void> {
 				runDelete({
 					id: typeof flags.id === "string" ? flags.id : undefined,
 				});
+				break;
+			}
+			case "next": {
+				runNext();
 				break;
 			}
 			default:

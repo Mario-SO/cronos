@@ -1,5 +1,5 @@
-import { Effect } from "effect";
 import { deleteEvent } from "@features/events/eventsState";
+import { Effect } from "effect";
 
 interface DeleteOptions {
 	id?: string;
