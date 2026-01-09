@@ -85,33 +85,34 @@ export function SettingsModal() {
 	const [notificationsField, setNotificationsField] =
 		useState<NotificationsField>(0);
 	const googleOptions = useMemo<GoogleOption[]>(() => {
-		const isSyncing = googleState.status === "syncing";
+		const isConnected = settings.google.connected;
+		const isSyncing = googleState.status === "syncing" && isConnected;
 		const options: GoogleOption[] = [
 			{
 				type: "action",
 				id: "connect",
-				label: settings.google.connected
-					? "Disconnect Google"
-					: "Connect Google",
-				disabled: settings.google.connected ? false : isSyncing,
+				label: isConnected ? "Disconnect Google" : "Connect Google",
+				disabled: isConnected ? false : isSyncing,
 			},
 			{
 				type: "action",
 				id: "sync",
 				label: "Sync now",
-				disabled: !settings.google.connected || isSyncing,
+				disabled: !isConnected || isSyncing,
 			},
-			...googleState.calendars.map(
-				(calendar): GoogleOption => ({
-					type: "calendar",
-					id: `calendar:${calendar.calendarId}`,
-					label: `${calendar.summary}${calendar.canWrite ? "" : " (read-only)"}`,
-					calendarId: calendar.calendarId,
-					enabled: calendar.enabled,
-					color: calendar.color,
-					canWrite: calendar.canWrite,
-				}),
-			),
+			...(isConnected
+				? googleState.calendars.map(
+						(calendar): GoogleOption => ({
+							type: "calendar",
+							id: `calendar:${calendar.calendarId}`,
+							label: `${calendar.summary}${calendar.canWrite ? "" : " (read-only)"}`,
+							calendarId: calendar.calendarId,
+							enabled: calendar.enabled,
+							color: calendar.color,
+							canWrite: calendar.canWrite,
+						}),
+					)
+				: []),
 		];
 		return options;
 	}, [googleState.calendars, googleState.status, settings.google.connected]);
@@ -564,7 +565,9 @@ export function SettingsModal() {
 								</text>
 								<text fg={ui.foreground}>
 									{settings.google.connected ? "Connected" : "Not connected"}
-									{googleState.status === "syncing" ? " (syncing)" : ""}
+									{settings.google.connected && googleState.status === "syncing"
+										? " (syncing)"
+										: ""}
 								</text>
 							</box>
 							{googleState.lastSyncAt && (
