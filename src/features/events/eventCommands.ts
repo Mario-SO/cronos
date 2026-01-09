@@ -1,6 +1,6 @@
-import { Effect } from "effect";
-import { openModal } from "@features/overlays/modalState";
 import type { CommandDefinition } from "@app/commands/types";
+import { openModal } from "@features/overlays/modalState";
+import { Effect } from "effect";
 
 export const eventCommands = [
 	{

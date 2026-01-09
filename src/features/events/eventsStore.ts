@@ -1,10 +1,10 @@
-import { SubscriptionRef } from "effect";
-import type { CalendarEvent } from "@shared/types";
 import {
 	createSubscriptionRef,
 	getSubscriptionValue,
 	useSubscriptionValue,
 } from "@shared/store";
+import type { CalendarEvent } from "@shared/types";
+import { SubscriptionRef } from "effect";
 
 export type EventStore = Map<string, CalendarEvent[]>; // key: YYYY-MM-DD
 

@@ -1,9 +1,9 @@
 import { buildHelpText, setAgendaCommandHandlers } from "@app/commands";
-import type { CalendarEvent } from "@shared/types";
-import { formatDateKey, formatTimeRange } from "@shared/dateUtils";
-import type { ScrollBoxRenderable } from "@opentui/core";
 import { deleteEvent, useEventsForDate } from "@features/events/eventsState";
 import { useTheme } from "@features/theme/themeState";
+import type { ScrollBoxRenderable } from "@opentui/core";
+import { formatDateKey, formatTimeRange } from "@shared/dateUtils";
+import type { CalendarEvent } from "@shared/types";
 import { Effect } from "effect";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 

@@ -1,15 +1,15 @@
-import type { Settings, WeekStartDay } from "@shared/types";
 import {
 	loadSettings,
 	normalizeSettings,
 	saveSettings,
 } from "@features/settings/settingsStorage";
-import { Effect, SubscriptionRef } from "effect";
 import {
 	createSubscriptionRef,
 	getSubscriptionValue,
 	useSubscriptionValue,
 } from "@shared/store";
+import type { Settings, WeekStartDay } from "@shared/types";
+import { Effect, SubscriptionRef } from "effect";
 
 const initialSettings = loadSettings();
 export const settingsStateRef = createSubscriptionRef(initialSettings);

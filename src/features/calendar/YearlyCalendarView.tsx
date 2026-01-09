@@ -1,16 +1,16 @@
 import { buildHelpText } from "@app/commands";
-import type { CalendarState } from "@shared/types";
-import { useTerminalSize } from "@shared/hooks/useTerminalSize";
+import { setYearGridColumns } from "@features/calendar/calendarState";
+import { useEventStore } from "@features/events/eventsState";
+import { useSettings } from "@features/settings/settingsState";
+import { useTheme } from "@features/theme/themeState";
 import {
 	formatDateKey,
 	getWeekdayCompactLabels,
 	getWeekdayIndex,
 	isSameDay,
 } from "@shared/dateUtils";
-import { setYearGridColumns } from "@features/calendar/calendarState";
-import { useEventStore } from "@features/events/eventsState";
-import { useSettings } from "@features/settings/settingsState";
-import { useTheme } from "@features/theme/themeState";
+import { useTerminalSize } from "@shared/hooks/useTerminalSize";
+import type { CalendarState } from "@shared/types";
 import { Effect } from "effect";
 import { useEffect } from "react";
 

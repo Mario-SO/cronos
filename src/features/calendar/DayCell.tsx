@@ -1,6 +1,6 @@
+import { useTheme } from "@features/theme/themeState";
 import type { CalendarEvent } from "@shared/types";
 import { DAY_CELL_EVENT_PREVIEWS, DAY_CELL_TITLE_LENGTH } from "./constants";
-import { useTheme } from "@features/theme/themeState";
 
 interface DayCellProps {
 	day: number;

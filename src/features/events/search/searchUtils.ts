@@ -1,5 +1,5 @@
-import type { CalendarEvent } from "@shared/types";
 import { parseDateKey } from "@shared/dateUtils";
+import type { CalendarEvent } from "@shared/types";
 
 export type SearchEntry =
 	| { type: "event"; event: CalendarEvent }

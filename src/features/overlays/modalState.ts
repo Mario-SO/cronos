@@ -1,10 +1,10 @@
-import type { CalendarEvent, ModalState, ModalType } from "@shared/types";
-import { Effect, SubscriptionRef } from "effect";
 import {
 	createSubscriptionRef,
 	getSubscriptionValue,
 	useSubscriptionValue,
 } from "@shared/store";
+import type { CalendarEvent, ModalState, ModalType } from "@shared/types";
+import { Effect, SubscriptionRef } from "effect";
 
 const initialModalState: ModalState = {
 	type: "none",

@@ -1,9 +1,9 @@
-import { appCommands } from "./appCommands";
-import { modalCommands } from "./modalCommands";
 import { agendaCommands } from "@features/agenda/agendaCommands";
 import { calendarCommands } from "@features/calendar/calendarCommands";
 import { eventCommands } from "@features/events/eventCommands";
 import { settingsCommands } from "@features/settings/settingsCommands";
+import { appCommands } from "./appCommands";
+import { modalCommands } from "./modalCommands";
 import type { CommandDefinition } from "./types";
 
 export const allCommands = [

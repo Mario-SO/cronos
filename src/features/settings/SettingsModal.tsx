@@ -1,12 +1,4 @@
 import { buildHelpText, setSettingsModalCommandHandlers } from "@app/commands";
-import { useModalDimensions } from "@shared/hooks/useModalDimensions";
-import { closeModal } from "@features/overlays/modalState";
-import { updateSettings, useSettings } from "@features/settings/settingsState";
-import {
-	getThemeOptions,
-	setThemeId,
-	useTheme,
-} from "@features/theme/themeState";
 import {
 	connectGoogleAccount,
 	disconnectGoogleAccount,
@@ -14,9 +6,17 @@ import {
 	toggleGoogleCalendar,
 	useGoogleSyncState,
 } from "@features/google/googleState";
+import { closeModal } from "@features/overlays/modalState";
+import { updateSettings, useSettings } from "@features/settings/settingsState";
+import {
+	getThemeOptions,
+	setThemeId,
+	useTheme,
+} from "@features/theme/themeState";
+import { ModalFrame } from "@shared/components/ModalFrame";
+import { useModalDimensions } from "@shared/hooks/useModalDimensions";
 import { Effect } from "effect";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ModalFrame } from "@shared/components/ModalFrame";
 import { CalendarSection } from "./sections/CalendarSection";
 import { NotificationsSection } from "./sections/NotificationsSection";
 import { SyncSection } from "./sections/SyncSection";

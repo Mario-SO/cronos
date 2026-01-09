@@ -1,6 +1,7 @@
 import { buildHelpText } from "@app/commands";
-import type { CalendarState } from "@shared/types";
-import { useTerminalSize } from "@shared/hooks/useTerminalSize";
+import { useEventStore } from "@features/events/eventsState";
+import { useSettings } from "@features/settings/settingsState";
+import { useTheme } from "@features/theme/themeState";
 import {
 	formatDateKey,
 	getDaysInMonth,
@@ -9,9 +10,8 @@ import {
 	getWeekdayOfFirst,
 	isSameDay,
 } from "@shared/dateUtils";
-import { useEventStore } from "@features/events/eventsState";
-import { useSettings } from "@features/settings/settingsState";
-import { useTheme } from "@features/theme/themeState";
+import { useTerminalSize } from "@shared/hooks/useTerminalSize";
+import type { CalendarState } from "@shared/types";
 import { DayCell } from "./DayCell";
 
 interface CalendarViewProps {

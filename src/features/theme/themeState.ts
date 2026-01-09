@@ -1,4 +1,10 @@
-import type { ThemeId } from "@shared/types";
+import { renderer } from "@app/renderer";
+import { loadSettings } from "@features/settings/settingsStorage";
+import {
+	createSubscriptionRef,
+	getSubscriptionValue,
+	useSubscriptionValue,
+} from "@shared/store";
 import type { ThemeOption } from "@shared/themes";
 import {
 	ANSI_THEME_ID,
@@ -8,14 +14,8 @@ import {
 	resolveTheme,
 	themeFromPalette,
 } from "@shared/themes";
-import { renderer } from "@app/renderer";
-import { loadSettings } from "@features/settings/settingsStorage";
+import type { ThemeId } from "@shared/types";
 import { Effect, SubscriptionRef } from "effect";
-import {
-	createSubscriptionRef,
-	getSubscriptionValue,
-	useSubscriptionValue,
-} from "@shared/store";
 
 const themeConfig = loadThemeConfig();
 const initialThemeId = loadSettings().themeId ?? DEFAULT_THEME_ID;

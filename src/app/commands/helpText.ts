@@ -1,5 +1,5 @@
-import { buildHelpKeyMap, joinHelpKeys } from "./help";
 import { getCommandContext } from "./context";
+import { buildHelpKeyMap, joinHelpKeys } from "./help";
 import { formatHelpText, getActiveBindings } from "./keymap";
 import type { CommandLayerId } from "./types";
 

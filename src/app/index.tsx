@@ -1,8 +1,8 @@
 import { renderer, setRoot } from "@app/renderer";
 import { initDatabase } from "@data/db";
-import { createRoot } from "@opentui/react";
 import { initEventStore } from "@features/events/eventsState";
 import { initGoogleState } from "@features/google/googleState";
+import { createRoot } from "@opentui/react";
 import { Effect } from "effect";
 import { App } from "./App";
 

@@ -1,26 +1,26 @@
-import { AgendaSideView } from "@features/agenda/AgendaSideView";
-import { CalendarView } from "@features/calendar/CalendarView";
-import { GoToDateModal } from "@features/calendar/GoToDateModal";
-import { YearlyCalendarView } from "@features/calendar/YearlyCalendarView";
-import { AddEventModal } from "@features/events/AddEventModal";
-import { SearchEventsModal } from "@features/events/SearchEventsModal";
-import { SettingsModal } from "@features/settings/SettingsModal";
 import {
 	formatHelpText,
 	getActiveBindings,
 	getCommandContext,
 } from "@app/commands";
 import { useCommandHandler } from "@app/keyboard";
-import type { CalendarEvent } from "@shared/types";
-import { useTerminalSize } from "@shared/hooks/useTerminalSize";
+import { AgendaSideView } from "@features/agenda/AgendaSideView";
 import { useAgendaState } from "@features/agenda/agendaState";
+import { CalendarView } from "@features/calendar/CalendarView";
 import { goToDate, useCalendarState } from "@features/calendar/calendarState";
+import { GoToDateModal } from "@features/calendar/GoToDateModal";
+import { YearlyCalendarView } from "@features/calendar/YearlyCalendarView";
+import { AddEventModal } from "@features/events/AddEventModal";
+import { SearchEventsModal } from "@features/events/SearchEventsModal";
 import {
 	closeModal,
 	openEditModal,
 	useModalState,
 } from "@features/overlays/modalState";
+import { SettingsModal } from "@features/settings/SettingsModal";
 import { useTheme } from "@features/theme/themeState";
+import { useTerminalSize } from "@shared/hooks/useTerminalSize";
+import type { CalendarEvent } from "@shared/types";
 import { Effect } from "effect";
 import { useCallback } from "react";
 

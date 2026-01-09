@@ -1,17 +1,17 @@
 import { buildHelpText, setSearchModalCommandHandlers } from "@app/commands";
-import type { CalendarEvent } from "@shared/types";
-import { useModalDimensions } from "@shared/hooks/useModalDimensions";
-import { SEARCH_MODAL_TITLE_LENGTH } from "./constants";
-import { formatTimeRange, parseDateKey } from "@shared/dateUtils";
-import type { ScrollBoxRenderable } from "@opentui/core";
 import { deleteEvent, getAllEvents } from "@features/events/eventsState";
 import { useTheme } from "@features/theme/themeState";
+import type { ScrollBoxRenderable } from "@opentui/core";
+import { ModalFrame } from "@shared/components/ModalFrame";
+import { formatTimeRange, parseDateKey } from "@shared/dateUtils";
+import { useModalDimensions } from "@shared/hooks/useModalDimensions";
+import type { CalendarEvent } from "@shared/types";
 import { Effect } from "effect";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ModalFrame } from "@shared/components/ModalFrame";
+import { SEARCH_MODAL_TITLE_LENGTH } from "./constants";
 import {
-	fuzzyMatch,
 	formatEventDate,
+	fuzzyMatch,
 	getEntryEvent,
 	groupEventsForSearch,
 	type SearchEntry,

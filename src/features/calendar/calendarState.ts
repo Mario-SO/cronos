@@ -1,16 +1,16 @@
-import type { CalendarState } from "@shared/types";
 import {
 	addDays,
 	addMonths,
 	getFirstDayOfMonth,
 	isSameMonth,
 } from "@shared/dateUtils";
-import { Effect, SubscriptionRef } from "effect";
 import {
 	createSubscriptionRef,
 	getSubscriptionValue,
 	useSubscriptionValue,
 } from "@shared/store";
+import type { CalendarState } from "@shared/types";
+import { Effect, SubscriptionRef } from "effect";
 
 const today = new Date();
 

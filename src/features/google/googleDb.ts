@@ -1,6 +1,6 @@
+import { getDatabase } from "@data/db";
 import type { ColorName } from "@shared/types";
 import { Effect } from "effect";
-import { getDatabase } from "@data/db";
 
 export interface GoogleCalendarRecord {
 	calendarId: string;

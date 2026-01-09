@@ -1,12 +1,3 @@
-import type { CalendarEvent, GoogleSettings } from "@shared/types";
-import {
-	clearGoogleDeletion,
-	getEnabledGoogleCalendars,
-	getGoogleCalendars,
-	getGoogleDeletions,
-	updateGoogleCalendarSyncState,
-	upsertGoogleCalendar,
-} from "@features/google/googleDb";
 import {
 	deleteEventById,
 	findEventByGoogleId,
@@ -16,9 +7,18 @@ import {
 	insertEvent,
 	updateEventById,
 } from "@data/repository";
-import { getColorByIndex } from "@shared/colors";
 import { initEventStore } from "@features/events/eventsState";
+import {
+	clearGoogleDeletion,
+	getEnabledGoogleCalendars,
+	getGoogleCalendars,
+	getGoogleDeletions,
+	updateGoogleCalendarSyncState,
+	upsertGoogleCalendar,
+} from "@features/google/googleDb";
 import { getSettings, updateSettings } from "@features/settings/settingsState";
+import { getColorByIndex } from "@shared/colors";
+import type { CalendarEvent, GoogleSettings } from "@shared/types";
 import { Effect } from "effect";
 import {
 	refreshGoogleToken,

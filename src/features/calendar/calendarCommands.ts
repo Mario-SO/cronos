@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import type { CommandDefinition } from "@app/commands/types";
 import { toggleAgenda as toggleAgendaState } from "@features/agenda/agendaState";
 import {
 	goToNextMonth,
@@ -11,7 +11,7 @@ import {
 	toggleCalendarViewMode,
 } from "@features/calendar/calendarState";
 import { openModal } from "@features/overlays/modalState";
-import type { CommandDefinition } from "@app/commands/types";
+import { Effect } from "effect";
 
 export const calendarCommands = [
 	{

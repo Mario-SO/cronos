@@ -1,16 +1,16 @@
 import { formatLayerHelpText, setAddModalCommandHandlers } from "@app/commands";
-import type { CalendarEvent } from "@shared/types";
-import { useModalDimensions } from "@shared/hooks/useModalDimensions";
-import { formatDateKey, formatTimeRange } from "@shared/dateUtils";
 import {
 	parseEventInput,
 	reconstructEventInput,
 } from "@features/events/eventParser";
 import { addEvent, updateEvent } from "@features/events/eventsState";
 import { useTheme } from "@features/theme/themeState";
+import { ModalFrame } from "@shared/components/ModalFrame";
+import { formatDateKey, formatTimeRange } from "@shared/dateUtils";
+import { useModalDimensions } from "@shared/hooks/useModalDimensions";
+import type { CalendarEvent } from "@shared/types";
 import { Effect } from "effect";
 import { useCallback, useEffect, useState } from "react";
-import { ModalFrame } from "@shared/components/ModalFrame";
 
 interface AddEventModalProps {
 	selectedDate: Date;

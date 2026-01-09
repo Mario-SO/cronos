@@ -1,5 +1,5 @@
-import { Effect } from "effect";
 import type { CommandDefinition } from "@app/commands/types";
+import { Effect } from "effect";
 
 export const agendaCommands = [
 	{

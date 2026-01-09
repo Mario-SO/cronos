@@ -1,6 +1,6 @@
-import type { ColorName, ParsedEventInput } from "@shared/types";
 import { COLOR_NAMES, getColorByIndex } from "@shared/colors";
 import { formatTime } from "@shared/dateUtils";
+import type { ColorName, ParsedEventInput } from "@shared/types";
 
 // Parse time like "2pm", "2:30pm", "14:00", "14"
 function parseTimeString(str: string): number | null {

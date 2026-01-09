@@ -1,13 +1,13 @@
 import { formatLayerHelpText, setGoToDateCommandHandlers } from "@app/commands";
-import { useModalDimensions } from "@shared/hooks/useModalDimensions";
+import { useTheme } from "@features/theme/themeState";
+import { ModalFrame } from "@shared/components/ModalFrame";
 import {
 	getShortMonthName,
 	isValidDate,
 	parseMonthAbbrev,
 } from "@shared/dateUtils";
-import { useTheme } from "@features/theme/themeState";
+import { useModalDimensions } from "@shared/hooks/useModalDimensions";
 import { useCallback, useEffect, useState } from "react";
-import { ModalFrame } from "@shared/components/ModalFrame";
 
 interface GoToDateModalProps {
 	currentDate: Date;

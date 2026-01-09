@@ -1,7 +1,7 @@
-import type { CalendarEvent, ColorName } from "@shared/types";
-import { initDatabase, closeDatabase } from "@data/db";
+import { closeDatabase, initDatabase } from "@data/db";
 import { getMaxEventIdCounter, insertEvent } from "@data/repository";
 import { formatDateKey } from "@shared/dateUtils";
+import type { CalendarEvent, ColorName } from "@shared/types";
 import { Effect } from "effect";
 
 const COLORS: ColorName[] = [

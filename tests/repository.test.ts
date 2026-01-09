@@ -8,8 +8,6 @@ import {
 } from "bun:test";
 import { rmSync } from "node:fs";
 import { join } from "node:path";
-import { Effect } from "effect";
-import type { CalendarEvent } from "@shared/types";
 import { closeDatabase, getDatabase, initDatabase } from "@data/db";
 import {
 	deleteEventById,
@@ -19,6 +17,8 @@ import {
 	insertEvent,
 	updateEventById,
 } from "@data/repository";
+import type { CalendarEvent } from "@shared/types";
+import { Effect } from "effect";
 
 const TEST_DB_DIR = join(import.meta.dir, "..", "tmp");
 const TEST_DB_PATH = join(TEST_DB_DIR, "test-events.db");

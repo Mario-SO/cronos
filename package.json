@@ -1,6 +1,6 @@
 {
 	"name": "@tuis/cronos",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "A terminal calendar app built with OpenTUI.",
 	"module": "src/app/index.tsx",
 	"type": "module",
@@ -37,7 +37,7 @@
 		"dev": "bun run --watch src/app/index.tsx",
 		"db:populate": "bun run src/scripts/populateDb.ts",
 		"hooks:install": "git config core.hooksPath .githooks",
-		"check": "bunx biome lint . && bunx biome format --write . && bunx tsc --noEmit",
+		"check": "bunx biome check --write . && bunx biome format --write . && bunx biome lint . && bunx tsc --noEmit",
 		"test": "bun test"
 	},
 	"devDependencies": {

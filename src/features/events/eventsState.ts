@@ -1,7 +1,14 @@
+import { recordGoogleDeletion } from "@features/google/googleDb";
 import type { CalendarEvent, ColorName } from "@shared/types";
 import { Effect, SubscriptionRef } from "effect";
-import { recordGoogleDeletion } from "@features/google/googleDb";
 import { MAX_EVENTS } from "./constants";
+import {
+	loadAllEvents,
+	loadMaxEventIdCounter,
+	persistEventCreate,
+	persistEventDelete,
+	persistEventUpdate,
+} from "./eventsService";
 import {
 	eventStoreRef,
 	generateEventId,
@@ -11,13 +18,6 @@ import {
 	sortDayEvents,
 	useEventStore,
 } from "./eventsStore";
-import {
-	loadAllEvents,
-	loadMaxEventIdCounter,
-	persistEventCreate,
-	persistEventDelete,
-	persistEventUpdate,
-} from "./eventsService";
 
 /**
  * Initialize the event store from SQLite.

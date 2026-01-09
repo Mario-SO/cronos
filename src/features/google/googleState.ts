@@ -3,13 +3,13 @@ import {
 	getGoogleCalendars,
 	setGoogleCalendarEnabled,
 } from "@features/google/googleDb";
-import { Effect, SubscriptionRef } from "effect";
-import { createSubscriptionRef, useSubscriptionValue } from "@shared/store";
 import {
 	connectGoogle,
 	disconnectGoogle,
 	syncGoogleNow,
 } from "@features/google/googleSync";
+import { createSubscriptionRef, useSubscriptionValue } from "@shared/store";
+import { Effect, SubscriptionRef } from "effect";
 
 type GoogleSyncStatus = "idle" | "syncing" | "error";
 

@@ -1,13 +1,13 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { getDefaultDataDir } from "@data/config";
+import { DEFAULT_THEME_ID } from "@shared/themes";
 import type {
 	GoogleSettings,
 	Settings,
 	ThemeId,
 	WeekStartDay,
 } from "@shared/types";
-import { getDefaultDataDir } from "@data/config";
-import { DEFAULT_THEME_ID } from "@shared/themes";
 
 export const SETTINGS_VERSION = 2;
 

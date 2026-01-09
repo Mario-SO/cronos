@@ -1,9 +1,9 @@
-import { Effect, SubscriptionRef } from "effect";
 import {
 	createSubscriptionRef,
 	getSubscriptionValue,
 	useSubscriptionValue,
 } from "@shared/store";
+import { Effect, SubscriptionRef } from "effect";
 
 interface AgendaState {
 	isOpen: boolean;

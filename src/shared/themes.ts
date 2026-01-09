@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { ColorName, ThemeId } from "@shared/types";
 import { getDefaultDataDir } from "@data/config";
 import type { TerminalColors } from "@opentui/core";
+import type { ColorName, ThemeId } from "@shared/types";
 import { COLOR_NAMES } from "./colors";
 
 export type ThemeUi = {
