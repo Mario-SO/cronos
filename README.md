@@ -101,7 +101,7 @@ export const calendarCommands = [
     - [ ] iCal export/import
 - [ ] Notifications for upcoming events
 - [ ] Recurring events
-- [ ] cli support (cronos add ...)
+- [x] cli support (cronos add ...)
 - [x] Persistent storage
 - [x] Search through event list
 - [x] Agenda side view
