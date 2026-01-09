@@ -1,6 +1,6 @@
 {
 	"name": "@tuis/cronos",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"description": "A terminal calendar app built with OpenTUI.",
 	"module": "src/app/index.tsx",
 	"type": "module",
@@ -32,7 +32,7 @@
 		"README.md"
 	],
 	"scripts": {
-		"build:cli": "bun build src/cli/index.ts --outdir dist --entry-naming \"cli.[ext]\" --target bun --format esm",
+		"build:cli": "bun build src/cli/index.ts --outdir dist --entry-naming \"cli.[ext]\" --target bun --format esm --minify",
 		"prepublishOnly": "bun run build:cli",
 		"dev": "bun run --watch src/app/index.tsx",
 		"db:populate": "bun run src/scripts/populateDb.ts",
