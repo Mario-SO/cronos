@@ -79,10 +79,9 @@ export const calendarCommands = [
     - [x] Week start day
     - [x] Notification options
     - [x] Themes
-    - [ ] Google Calendar sync
+    - [x] Google Calendar sync
     - [ ] iCal export/import
 - [ ] Notifications for upcoming events
-- [ ] Multiple day events??
 - [ ] Recurring events
 - [ ] cli support (cronos add ...)
 - [x] Persistent storage
