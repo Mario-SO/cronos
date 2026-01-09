@@ -18,12 +18,10 @@
 		// Path aliases
 		"baseUrl": ".",
 		"paths": {
-			"@core/*": ["src/core/*"],
-			"@components/*": ["src/components/*"],
-			"@db/*": ["src/db/*"],
-			"@hooks/*": ["src/hooks/*"],
-			"@lib/*": ["src/lib/*"],
-			"@state/*": ["src/state/*"]
+			"@app/*": ["src/app/*"],
+			"@features/*": ["src/features/*"],
+			"@data/*": ["src/data/*"],
+			"@shared/*": ["src/shared/*"]
 		},
 
 		// Best practices

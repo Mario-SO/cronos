@@ -1,10 +1,10 @@
 {
 	"name": "cronos-tui",
-	"module": "src/index.tsx",
+	"module": "src/app/index.tsx",
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"dev": "bun run --watch src/index.tsx",
+		"dev": "bun run --watch src/app/index.tsx",
 		"db:populate": "bun run src/scripts/populateDb.ts",
 		"hooks:install": "git config core.hooksPath .githooks",
 		"check": "bunx biome lint . && bunx biome format --write . && bunx tsc --noEmit",

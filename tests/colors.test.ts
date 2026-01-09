@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import type { ColorName } from "@core/types";
-import { COLOR_NAMES, getColorByIndex } from "../src/lib/colors";
-import { BUILTIN_THEMES, DEFAULT_THEME_ID } from "../src/lib/themes";
+import type { ColorName } from "@shared/types";
+import { COLOR_NAMES, getColorByIndex } from "@shared/colors";
+import { BUILTIN_THEMES, DEFAULT_THEME_ID } from "@shared/themes";
 
 const theme = BUILTIN_THEMES[DEFAULT_THEME_ID];
 if (!theme) {

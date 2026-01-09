@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { parseEventInput, reconstructEventInput } from "../src/lib/eventParser";
+import {
+	parseEventInput,
+	reconstructEventInput,
+} from "@features/events/eventParser";
 
 describe("parseEventInput", () => {
 	describe("title extraction", () => {

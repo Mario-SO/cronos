@@ -9,8 +9,8 @@ import {
 import { rmSync } from "node:fs";
 import { join } from "node:path";
 import { Effect } from "effect";
-import type { CalendarEvent } from "../src/core/types";
-import { closeDatabase, getDatabase, initDatabase } from "../src/db/index";
+import type { CalendarEvent } from "@shared/types";
+import { closeDatabase, getDatabase, initDatabase } from "@data/db";
 import {
 	deleteEventById,
 	findAllEvents,
@@ -18,7 +18,7 @@ import {
 	getMaxEventIdCounter,
 	insertEvent,
 	updateEventById,
-} from "../src/db/repository";
+} from "@data/repository";
 
 const TEST_DB_DIR = join(import.meta.dir, "..", "tmp");
 const TEST_DB_PATH = join(TEST_DB_DIR, "test-events.db");
