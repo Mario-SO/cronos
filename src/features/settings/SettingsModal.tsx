@@ -163,13 +163,6 @@ export function SettingsModal() {
 		draftNotificationsEnabled !== settings.notificationsEnabled ||
 		normalizedNotificationMinutes !== settings.notificationLeadMinutes ||
 		draftTheme !== settings.themeId;
-	const appliedWeekStartLabel = useMemo(
-		() =>
-			WEEK_START_OPTIONS.find((option) => option.id === settings.weekStartDay)
-				?.label ?? "Mon",
-		[settings.weekStartDay],
-	);
-
 	const handleNotificationMinutesInput = useCallback((value: string) => {
 		const sanitized = value.replace(/[^0-9]/g, "");
 		setDraftNotificationMinutes(sanitized);
@@ -486,7 +479,6 @@ export function SettingsModal() {
 							weekStartIndex={weekStartIndex}
 							weekStartOptions={WEEK_START_OPTIONS}
 							labelWidth={labelWidth}
-							appliedWeekStartLabel={appliedWeekStartLabel}
 						/>
 					) : activeSection === "notifications" ? (
 						<NotificationsSection
