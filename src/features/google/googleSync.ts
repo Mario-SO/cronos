@@ -451,6 +451,7 @@ const syncCalendar = (
 	canWrite: boolean,
 	syncToken?: string | null,
 	lastSyncAt?: string | null,
+	forceRefresh?: boolean,
 ): Effect.Effect<
 	{ syncToken?: string | null; lastSyncAt?: string | null },
 	Error,
@@ -459,7 +460,8 @@ const syncCalendar = (
 	Effect.gen(function* () {
 		let pageToken: string | undefined;
 		let nextSyncToken: string | null | undefined;
-		let activeSyncToken = canWrite ? (syncToken ?? null) : null;
+		let activeSyncToken =
+			canWrite && !forceRefresh ? (syncToken ?? null) : null;
 		const touchedLocalIds = new Set<string>();
 		const localCounterStart = yield* getMaxEventIdCounter();
 		let localCounter = localCounterStart;
@@ -528,6 +530,7 @@ const syncCalendar = (
 					yield* updateEventById(local.id, {
 						googleEtag: updated.etag,
 						updatedAt: toIso(updated.updated) ?? local.updatedAt,
+						...(forceRefresh ? { conferenceUrl: mapped.conferenceUrl } : {}),
 					});
 					touchedLocalIds.add(local.id);
 					return;
@@ -644,7 +647,7 @@ const syncDeletions = (
 		}
 	});
 
-export const syncGoogleNow = () =>
+export const syncGoogleNow = (options?: { forceRefresh?: boolean }) =>
 	Effect.gen(function* () {
 		const accessToken = yield* ensureAccessToken();
 		yield* refreshCalendars(accessToken);
@@ -662,6 +665,7 @@ export const syncGoogleNow = () =>
 				calendar.canWrite,
 				calendar.syncToken ?? null,
 				calendar.lastSyncAt ?? null,
+				options?.forceRefresh ?? false,
 			);
 			yield* updateGoogleCalendarSyncState(
 				calendar.calendarId,
