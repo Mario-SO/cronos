@@ -135,6 +135,22 @@ describe("Repository CRUD Operations", () => {
 			expect(at(events, 0).endTime).toBeUndefined();
 		});
 
+		test("inserts an event with a conference link", () => {
+			const event = createTestEvent({
+				id: "event-4-1234567890",
+				title: "Meet Sync",
+				conferenceUrl: "https://meet.google.com/abc-defg-hij",
+			});
+
+			Effect.runSync(insertEvent(event));
+
+			const events = Effect.runSync(findAllEvents());
+			expect(events).toHaveLength(1);
+			expect(at(events, 0).conferenceUrl).toBe(
+				"https://meet.google.com/abc-defg-hij",
+			);
+		});
+
 		test("inserts multiple events", () => {
 			const event1 = createTestEvent({ id: "event-1-111", title: "First" });
 			const event2 = createTestEvent({ id: "event-2-222", title: "Second" });
@@ -345,6 +361,22 @@ describe("Repository CRUD Operations", () => {
 
 			const events = Effect.runSync(findAllEvents());
 			expect(at(events, 0).endTime).toBe(660);
+		});
+
+		test("updates conference url", () => {
+			const event = createTestEvent({ id: "e1" });
+			Effect.runSync(insertEvent(event));
+
+			Effect.runSync(
+				updateEventById("e1", {
+					conferenceUrl: "https://meet.google.com/updated-link",
+				}),
+			);
+
+			const events = Effect.runSync(findAllEvents());
+			expect(at(events, 0).conferenceUrl).toBe(
+				"https://meet.google.com/updated-link",
+			);
 		});
 
 		test("clears start time by setting to undefined", () => {

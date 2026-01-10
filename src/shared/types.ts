@@ -17,6 +17,7 @@ export interface CalendarEvent {
 	googleEventId?: string;
 	googleCalendarId?: string;
 	googleEtag?: string;
+	conferenceUrl?: string;
 	updatedAt?: string; // ISO timestamp
 }
 

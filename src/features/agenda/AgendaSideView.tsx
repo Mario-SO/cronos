@@ -3,6 +3,7 @@ import { deleteEvent, useEventsForDate } from "@features/events/eventsState";
 import { useTheme } from "@features/theme/themeState";
 import type { ScrollBoxRenderable } from "@opentui/core";
 import { formatDateKey, formatTimeRange } from "@shared/dateUtils";
+import { openBrowser } from "@shared/openBrowser";
 import type { CalendarEvent } from "@shared/types";
 import { Effect } from "effect";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -98,9 +99,21 @@ export function AgendaSideView({
 		}
 	}, [clampedIndex, events, isActive, selectedIndex]);
 
+	const openLink = useCallback(() => {
+		if (!isActive) return;
+		const event = events[clampedIndex];
+		const conferenceUrl = event?.conferenceUrl;
+		if (!conferenceUrl) return;
+		Effect.runSync(
+			Effect.catchAll(openBrowser(conferenceUrl), () =>
+				Effect.sync(() => undefined),
+			),
+		);
+	}, [clampedIndex, events, isActive]);
+
 	const agendaHandlers = useMemo(
-		() => ({ moveSelection, editSelection, deleteSelection }),
-		[moveSelection, editSelection, deleteSelection],
+		() => ({ moveSelection, editSelection, deleteSelection, openLink }),
+		[moveSelection, editSelection, deleteSelection, openLink],
 	);
 
 	useEffect(() => {
@@ -121,6 +134,7 @@ export function AgendaSideView({
 				label: "Navigate",
 				order: ["↑", "↓"],
 			},
+			{ commandIds: ["agenda.openLink"], label: "Open link" },
 			{ commandIds: ["agenda.edit"], label: "Edit" },
 			{ commandIds: ["agenda.delete"], label: "Delete" },
 			{ commandIds: ["calendar.toggleAgenda"], label: "Toggle" },
@@ -163,6 +177,12 @@ export function AgendaSideView({
 					>
 						{events.map((event, index) => {
 							const isSelected = index === clampedIndex;
+							const linkIndicator = event.conferenceUrl ? " ↗" : "";
+							const maxTitleLength = Math.max(
+								0,
+								titleWidth - linkIndicator.length,
+							);
+							const displayTitle = `${event.title.slice(0, maxTitleLength)}${linkIndicator}`;
 							return (
 								<box
 									key={event.id}
@@ -183,7 +203,7 @@ export function AgendaSideView({
 										fg={isSelected ? ui.foreground : ui.foregroundDim}
 										style={{ marginLeft: 1, width: titleWidth }}
 									>
-										{event.title.slice(0, titleWidth)}
+										{displayTitle}
 									</text>
 									{isSelected && (
 										<text fg={ui.selected} style={{ marginLeft: 1 }}>

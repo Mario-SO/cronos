@@ -68,17 +68,25 @@ export function DayCell({
 			<text fg={fgColor} style={{ marginLeft: 1 }}>
 				{String(day).padStart(2, " ")}
 			</text>
-			{displayEvents.map((event) => (
-				<box key={event.id} style={{ flexDirection: "row", marginLeft: 1 }}>
-					<text fg={theme.eventColors[event.color]}>●</text>
-					<text
-						fg={isSelected ? ui.background : ui.foregroundDim}
-						style={{ marginLeft: 1 }}
-					>
-						{event.title.slice(0, DAY_CELL_TITLE_LENGTH)}
-					</text>
-				</box>
-			))}
+			{displayEvents.map((event) => {
+				const linkIndicator = event.conferenceUrl ? " ↗" : "";
+				const maxTitleLength = Math.max(
+					0,
+					DAY_CELL_TITLE_LENGTH - linkIndicator.length,
+				);
+				const displayTitle = `${event.title.slice(0, maxTitleLength)}${linkIndicator}`;
+				return (
+					<box key={event.id} style={{ flexDirection: "row", marginLeft: 1 }}>
+						<text fg={theme.eventColors[event.color]}>●</text>
+						<text
+							fg={isSelected ? ui.background : ui.foregroundDim}
+							style={{ marginLeft: 1 }}
+						>
+							{displayTitle}
+						</text>
+					</box>
+				);
+			})}
 			{moreCount > 0 && (
 				<text
 					fg={isSelected ? ui.background : ui.foreground}

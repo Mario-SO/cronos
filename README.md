@@ -149,6 +149,7 @@ export const calendarCommands = [
     - [ ] iCal export/import
 - [ ] Notifications for upcoming events
 - [ ] Recurring events
+- [x] Open google meet links
 - [x] cli support (cronos add ...)
 - [x] Persistent storage
 - [x] Search through event list

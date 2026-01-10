@@ -220,6 +220,20 @@ export function SearchEventsModal({
 								entry.type === "group"
 									? `↻ x${entry.count}`
 									: formatTimeRange(event.startTime, event.endTime);
+							const hasLink =
+								entry.type === "group"
+									? entry.hasLink
+									: Boolean(event.conferenceUrl);
+							const linkIndicator = hasLink ? " ↗" : "";
+							const baseTitle =
+								entry.type === "group"
+									? `${entry.title} (${entry.count})`
+									: event.title;
+							const maxTitleLength = Math.max(
+								0,
+								SEARCH_MODAL_TITLE_LENGTH - linkIndicator.length,
+							);
+							const displayTitle = `${baseTitle.slice(0, maxTitleLength)}${linkIndicator}`;
 							return (
 								<box
 									key={event.id}
@@ -247,12 +261,7 @@ export function SearchEventsModal({
 										fg={isSelected ? ui.foreground : ui.foregroundDim}
 										style={{ marginLeft: 1 }}
 									>
-										{entry.type === "group"
-											? `${entry.title} (${entry.count})`.slice(
-													0,
-													SEARCH_MODAL_TITLE_LENGTH,
-												)
-											: event.title.slice(0, SEARCH_MODAL_TITLE_LENGTH)}
+										{displayTitle}
 									</text>
 									{isSelected && (
 										<text fg={ui.selected} style={{ marginLeft: 1 }}>

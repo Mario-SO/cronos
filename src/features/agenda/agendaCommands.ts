@@ -42,4 +42,14 @@ export const agendaCommands = [
 				ctx.agenda?.deleteSelection();
 			}),
 	},
+	{
+		id: "agenda.openLink",
+		title: "Open link",
+		keys: [{ key: "return", preventDefault: true }],
+		layers: ["agenda"],
+		run: (ctx) =>
+			Effect.sync(() => {
+				ctx.agenda?.openLink();
+			}),
+	},
 ] as const satisfies readonly CommandDefinition[];
