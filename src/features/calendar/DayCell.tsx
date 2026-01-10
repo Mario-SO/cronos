@@ -2,6 +2,16 @@ import { useTheme } from "@features/theme/themeState";
 import type { CalendarEvent } from "@shared/types";
 import { DAY_CELL_EVENT_PREVIEWS, DAY_CELL_TITLE_LENGTH } from "./constants";
 
+function formatStartTime24(minutes: number): string {
+	const hours = Math.floor(minutes / 60);
+	const mins = minutes % 60;
+	const hourLabel = String(hours).padStart(2, "0");
+	if (mins === 0) {
+		return `${hourLabel}:00`;
+	}
+	return `${hourLabel}:${String(mins).padStart(2, "0")}`;
+}
+
 interface DayCellProps {
 	day: number;
 	isToday: boolean;
@@ -70,11 +80,28 @@ export function DayCell({
 			</text>
 			{displayEvents.map((event) => {
 				const linkIndicator = event.conferenceUrl ? " ↗" : "";
-				const maxTitleLength = Math.max(
-					0,
-					DAY_CELL_TITLE_LENGTH - linkIndicator.length,
+				const startTimeLabel =
+					event.startTime !== undefined
+						? formatStartTime24(event.startTime)
+						: "";
+				const timePrefix = startTimeLabel ? `${startTimeLabel} ` : "";
+				const contentWidth = Math.max(0, width - 5);
+				const availableForTitle = Math.max(0, contentWidth - timePrefix.length);
+				const indicatorFits =
+					linkIndicator.length > 0 && availableForTitle >= linkIndicator.length;
+				const maxTitleLength = Math.min(
+					DAY_CELL_TITLE_LENGTH,
+					Math.max(
+						0,
+						availableForTitle - (indicatorFits ? linkIndicator.length : 0),
+					),
 				);
-				const displayTitle = `${event.title.slice(0, maxTitleLength)}${linkIndicator}`;
+				const displayTitle = `${event.title.slice(0, maxTitleLength)}${
+					indicatorFits ? linkIndicator : ""
+				}`;
+				const displayLine = displayTitle
+					? `${timePrefix}${displayTitle}`
+					: timePrefix.trimEnd();
 				return (
 					<box key={event.id} style={{ flexDirection: "row", marginLeft: 1 }}>
 						<text fg={theme.eventColors[event.color]}>●</text>
@@ -82,7 +109,7 @@ export function DayCell({
 							fg={isSelected ? ui.background : ui.foregroundDim}
 							style={{ marginLeft: 1 }}
 						>
-							{displayTitle}
+							{displayLine}
 						</text>
 					</box>
 				);

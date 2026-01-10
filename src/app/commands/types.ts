@@ -9,6 +9,8 @@ export interface AgendaCommandHandlers {
 }
 
 export interface AddModalCommandHandlers {
+	focusNextField: () => void;
+	focusPrevField: () => void;
 	submit: () => void;
 }
 

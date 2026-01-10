@@ -272,6 +272,21 @@ describe("parseEventInput", () => {
 		});
 	});
 
+	describe("google meet flag", () => {
+		test("parses !g flag", () => {
+			const result = parseEventInput("Team sync !g");
+			expect(result.title).toBe("Team sync");
+			expect(result.googleMeet).toBe(true);
+		});
+
+		test("parses !g after color", () => {
+			const result = parseEventInput("Team sync #blue !g");
+			expect(result.title).toBe("Team sync");
+			expect(result.color).toBe("blue");
+			expect(result.googleMeet).toBe(true);
+		});
+	});
+
 	describe("edge cases", () => {
 		test("handles multiple spaces", () => {
 			const result = parseEventInput("Team   meeting   2pm");
@@ -353,6 +368,15 @@ describe("reconstructEventInput", () => {
 		expect(result).toBe("Planning 10am-11:30am #blue");
 	});
 
+	test("reconstructs google meet flag", () => {
+		const result = reconstructEventInput({
+			title: "Team sync",
+			color: "gray",
+			googleMeet: true,
+		});
+		expect(result).toBe("Team sync !g");
+	});
+
 	test("formats time with minutes correctly", () => {
 		const result = reconstructEventInput({
 			title: "Meeting",
@@ -399,6 +423,7 @@ describe("round-trip parsing", () => {
 			"Quick call 3:30pm",
 			"All day event #red",
 			"Simple event",
+			"Project sync 1pm-2pm #orange !g",
 		];
 
 		for (const input of inputs) {

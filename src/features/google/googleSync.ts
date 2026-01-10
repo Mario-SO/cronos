@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import {
 	deleteEventById,
 	findEventByGoogleId,
@@ -24,6 +25,7 @@ import {
 	refreshGoogleToken,
 	startGoogleOAuth,
 	toGoogleAllDayEvent,
+	toGoogleEvent,
 } from "./googleApi";
 
 const GOOGLE_API_BASE = "https://www.googleapis.com/calendar/v3";
@@ -185,6 +187,10 @@ function getConferenceUrl(event: GoogleEvent): string | undefined {
 	);
 	const anyEntry = entryPoints.find((entry) => entry.uri);
 	return videoEntry?.uri ?? anyEntry?.uri ?? event.hangoutLink ?? undefined;
+}
+
+function createConferenceRequestId(): string {
+	return `cronos-${randomBytes(8).toString("hex")}`;
 }
 
 function canWriteCalendar(accessRole?: string): boolean {
@@ -395,6 +401,61 @@ const createGoogleEvent = (
 			id: data.id,
 			etag: data.etag ?? undefined,
 			updated: data.updated,
+		};
+	});
+
+export const createGoogleMeetEvent = (event: CalendarEvent) =>
+	Effect.gen(function* () {
+		const accessToken = yield* ensureAccessToken();
+		const calendars = (yield* getEnabledGoogleCalendars()).filter(
+			(calendar) => calendar.canWrite,
+		);
+		if (calendars.length === 0) {
+			return yield* Effect.fail(new Error("No writable Google calendars"));
+		}
+		const calendarsByColor = new Map(
+			calendars.map((calendar) => [calendar.color, calendar]),
+		);
+		const calendar = calendarsByColor.get(event.color) ?? calendars[0];
+		if (!calendar) {
+			return yield* Effect.fail(new Error("Missing Google calendar"));
+		}
+		const attendees = event.attendees?.length
+			? event.attendees.map((email) => ({ email }))
+			: undefined;
+		const body = {
+			...toGoogleEvent(event),
+			...(attendees ? { attendees } : {}),
+			conferenceData: {
+				createRequest: {
+					requestId: createConferenceRequestId(),
+					conferenceSolutionKey: {
+						type: "hangoutsMeet",
+					},
+				},
+			},
+		};
+		const params: Record<string, string> = {
+			conferenceDataVersion: "1",
+		};
+		if (attendees) {
+			params.sendUpdates = "all";
+		}
+		const { data } = yield* googleRequestJson<GoogleEvent>(
+			accessToken,
+			`/calendars/${encodeURIComponent(calendar.calendarId)}/events`,
+			{
+				method: "POST",
+				body: JSON.stringify(body),
+			},
+			params,
+		);
+		return {
+			googleEventId: data.id,
+			googleCalendarId: calendar.calendarId,
+			googleEtag: data.etag ?? undefined,
+			conferenceUrl: getConferenceUrl(data),
+			updatedAt: toIso(data.updated) ?? new Date().toISOString(),
 		};
 	});
 

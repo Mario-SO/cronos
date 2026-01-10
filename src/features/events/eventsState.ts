@@ -41,6 +41,7 @@ export const addEvent = (
 	startTime?: number,
 	endTime?: number,
 	color: ColorName = "gray",
+	attendees?: string[],
 ) =>
 	Effect.gen(function* () {
 		const store = yield* SubscriptionRef.get(eventStoreRef);
@@ -61,6 +62,7 @@ export const addEvent = (
 			startTime,
 			endTime,
 			color,
+			attendees,
 			updatedAt: new Date().toISOString(),
 		};
 

@@ -9,12 +9,35 @@ interface EventRow {
 	start_time: number | null;
 	end_time: number | null;
 	color: string;
+	attendees: string | null;
 	google_event_id: string | null;
 	google_calendar_id: string | null;
 	google_etag: string | null;
 	conference_url: string | null;
 	created_at: string;
 	updated_at: string;
+}
+
+function parseAttendees(raw: string | null): string[] | undefined {
+	if (!raw) return undefined;
+	try {
+		const parsed = JSON.parse(raw);
+		if (Array.isArray(parsed)) {
+			return parsed.filter((item) => typeof item === "string");
+		}
+	} catch {
+		// Fall through to legacy parsing.
+	}
+	const legacy = raw
+		.split(",")
+		.map((item) => item.trim())
+		.filter(Boolean);
+	return legacy.length > 0 ? legacy : undefined;
+}
+
+function serializeAttendees(attendees?: string[]): string | null {
+	if (!attendees) return null;
+	return JSON.stringify(attendees);
 }
 
 /**
@@ -28,6 +51,7 @@ function rowToEvent(row: EventRow): CalendarEvent {
 		startTime: row.start_time ?? undefined,
 		endTime: row.end_time ?? undefined,
 		color: row.color as ColorName,
+		attendees: parseAttendees(row.attendees),
 		googleEventId: row.google_event_id ?? undefined,
 		googleCalendarId: row.google_calendar_id ?? undefined,
 		googleEtag: row.google_etag ?? undefined,
@@ -51,13 +75,14 @@ export const insertEvent = (event: CalendarEvent) =>
 				start_time,
 				end_time,
 				color,
+				attendees,
 				google_event_id,
 				google_calendar_id,
 				google_etag,
 				conference_url,
 				updated_at
 			)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`);
 		stmt.run(
 			event.id,
@@ -66,6 +91,7 @@ export const insertEvent = (event: CalendarEvent) =>
 			event.startTime ?? null,
 			event.endTime ?? null,
 			event.color,
+			serializeAttendees(event.attendees),
 			event.googleEventId ?? null,
 			event.googleCalendarId ?? null,
 			event.googleEtag ?? null,
@@ -107,6 +133,10 @@ export const updateEventById = (
 		if (updates.color !== undefined) {
 			setClauses.push("color = ?");
 			values.push(updates.color);
+		}
+		if ("attendees" in updates) {
+			setClauses.push("attendees = ?");
+			values.push(serializeAttendees(updates.attendees));
 		}
 		if ("googleEventId" in updates) {
 			setClauses.push("google_event_id = ?");

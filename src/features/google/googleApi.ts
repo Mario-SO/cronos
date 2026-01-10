@@ -229,16 +229,47 @@ export function googleApiRequest<T>(
 	});
 }
 
-export function toGoogleAllDayEvent(event: CalendarEvent): {
+type GoogleEventTime = {
+	date?: string;
+	dateTime?: string;
+	timeZone?: string;
+};
+
+export type GoogleEventPayload = {
 	summary: string;
-	start: { date: string };
-	end: { date: string };
-} {
+	start: GoogleEventTime;
+	end: GoogleEventTime;
+};
+
+export function toGoogleAllDayEvent(event: CalendarEvent): GoogleEventPayload {
 	const endDate = addDays(event.date, 1);
 	return {
 		summary: event.title,
 		start: { date: event.date },
 		end: { date: endDate },
+	};
+}
+
+export function toGoogleEvent(event: CalendarEvent): GoogleEventPayload {
+	if (event.startTime === undefined || event.endTime === undefined) {
+		return toGoogleAllDayEvent(event);
+	}
+
+	const startDateTime = buildDateTimeWithOffset(event.date, event.startTime);
+	const endDateTime = buildDateTimeWithOffset(event.date, event.endTime);
+	if (!startDateTime || !endDateTime) {
+		return toGoogleAllDayEvent(event);
+	}
+
+	const timeZone = getLocalTimeZone();
+	return {
+		summary: event.title,
+		start: timeZone
+			? { dateTime: startDateTime, timeZone }
+			: { dateTime: startDateTime },
+		end: timeZone
+			? { dateTime: endDateTime, timeZone }
+			: { dateTime: endDateTime },
 	};
 }
 
@@ -252,4 +283,68 @@ function addDays(dateStr: string, days: number): string {
 	const day = Number(dayStr);
 	const date = new Date(Date.UTC(year, month - 1, day + days));
 	return date.toISOString().slice(0, 10);
+}
+
+function parseDateParts(
+	dateStr: string,
+): { year: number; month: number; day: number } | null {
+	const [yearStr, monthStr, dayStr] = dateStr.split("-");
+	if (!yearStr || !monthStr || !dayStr) {
+		return null;
+	}
+	const year = Number(yearStr);
+	const month = Number(monthStr);
+	const day = Number(dayStr);
+	if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) {
+		return null;
+	}
+	return { year, month, day };
+}
+
+function buildDateTimeWithOffset(
+	dateStr: string,
+	minutes: number,
+): string | null {
+	const parts = parseDateParts(dateStr);
+	if (!parts) {
+		return null;
+	}
+	const hours = Math.floor(minutes / 60);
+	const mins = minutes % 60;
+	const date = new Date(
+		parts.year,
+		parts.month - 1,
+		parts.day,
+		hours,
+		mins,
+		0,
+		0,
+	);
+	if (Number.isNaN(date.getTime())) {
+		return null;
+	}
+	return formatDateTimeWithOffset(date);
+}
+
+function formatDateTimeWithOffset(date: Date): string {
+	const pad = (value: number) => String(value).padStart(2, "0");
+	const offsetMinutes = date.getTimezoneOffset();
+	const sign = offsetMinutes > 0 ? "-" : "+";
+	const absOffset = Math.abs(offsetMinutes);
+	const offsetHours = pad(Math.floor(absOffset / 60));
+	const offsetMins = pad(absOffset % 60);
+	return [
+		`${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+		`T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`,
+		`${sign}${offsetHours}:${offsetMins}`,
+	].join("");
+}
+
+function getLocalTimeZone(): string | undefined {
+	try {
+		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		return timeZone || undefined;
+	} catch {
+		return undefined;
+	}
 }

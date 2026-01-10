@@ -17,6 +17,7 @@ import {
 	openEditModal,
 	useModalState,
 } from "@features/overlays/modalState";
+import { ToastHost } from "@features/overlays/ToastHost";
 import { SettingsModal } from "@features/settings/SettingsModal";
 import { useTheme } from "@features/theme/themeState";
 import { useTerminalSize } from "@shared/hooks/useTerminalSize";
@@ -150,6 +151,8 @@ export function App() {
 			)}
 
 			{modalState.type === "settings" && <SettingsModal />}
+
+			<ToastHost />
 
 			{/* Quit hint */}
 			{quitHint && (

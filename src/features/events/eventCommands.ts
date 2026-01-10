@@ -28,6 +28,26 @@ export const eventCommands = [
 			}),
 	},
 	{
+		id: "modal.add.nextField",
+		title: "Next field",
+		keys: [{ key: "tab", preventDefault: true }],
+		layers: ["modal:add"],
+		run: (ctx) =>
+			Effect.sync(() => {
+				ctx.addModal?.focusNextField();
+			}),
+	},
+	{
+		id: "modal.add.prevField",
+		title: "Previous field",
+		keys: [{ key: "shift+tab", preventDefault: true }],
+		layers: ["modal:add"],
+		run: (ctx) =>
+			Effect.sync(() => {
+				ctx.addModal?.focusPrevField();
+			}),
+	},
+	{
 		id: "modal.search.moveDown",
 		title: "Next result",
 		keys: [{ key: "down", preventDefault: true }],

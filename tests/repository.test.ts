@@ -151,6 +151,23 @@ describe("Repository CRUD Operations", () => {
 			);
 		});
 
+		test("inserts an event with attendees", () => {
+			const event = createTestEvent({
+				id: "event-5-1234567890",
+				title: "Invite Test",
+				attendees: ["a@example.com", "b@example.com"],
+			});
+
+			Effect.runSync(insertEvent(event));
+
+			const events = Effect.runSync(findAllEvents());
+			expect(events).toHaveLength(1);
+			expect(at(events, 0).attendees).toEqual([
+				"a@example.com",
+				"b@example.com",
+			]);
+		});
+
 		test("inserts multiple events", () => {
 			const event1 = createTestEvent({ id: "event-1-111", title: "First" });
 			const event2 = createTestEvent({ id: "event-2-222", title: "Second" });
@@ -377,6 +394,39 @@ describe("Repository CRUD Operations", () => {
 			expect(at(events, 0).conferenceUrl).toBe(
 				"https://meet.google.com/updated-link",
 			);
+		});
+
+		test("updates attendees", () => {
+			const event = createTestEvent({
+				id: "e1",
+				attendees: ["a@example.com"],
+			});
+			Effect.runSync(insertEvent(event));
+
+			Effect.runSync(
+				updateEventById("e1", {
+					attendees: ["b@example.com", "c@example.com"],
+				}),
+			);
+
+			const events = Effect.runSync(findAllEvents());
+			expect(at(events, 0).attendees).toEqual([
+				"b@example.com",
+				"c@example.com",
+			]);
+		});
+
+		test("clears attendees when set to empty array", () => {
+			const event = createTestEvent({
+				id: "e1",
+				attendees: ["a@example.com", "b@example.com"],
+			});
+			Effect.runSync(insertEvent(event));
+
+			Effect.runSync(updateEventById("e1", { attendees: [] }));
+
+			const events = Effect.runSync(findAllEvents());
+			expect(at(events, 0).attendees).toEqual([]);
 		});
 
 		test("clears start time by setting to undefined", () => {

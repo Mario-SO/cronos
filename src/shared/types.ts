@@ -14,6 +14,7 @@ export interface CalendarEvent {
 	startTime?: number; // Minutes from midnight (0-1439)
 	endTime?: number; // Minutes from midnight (0-1439)
 	color: ColorName;
+	attendees?: string[];
 	googleEventId?: string;
 	googleCalendarId?: string;
 	googleEtag?: string;
@@ -60,4 +61,5 @@ export interface ParsedEventInput {
 	startTime?: number;
 	endTime?: number;
 	color: ColorName;
+	googleMeet: boolean;
 }

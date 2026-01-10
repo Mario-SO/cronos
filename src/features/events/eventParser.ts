@@ -111,6 +111,20 @@ export function parseEventInput(input: string): ParsedEventInput {
 	let color: ColorName = "gray";
 	let startTime: number | undefined;
 	let endTime: number | undefined;
+	let googleMeet = false;
+
+	const tokens = remaining.split(/\s+/).filter(Boolean);
+	if (tokens.length > 0) {
+		const filtered: string[] = [];
+		for (const token of tokens) {
+			if (/^!g$/i.test(token)) {
+				googleMeet = true;
+				continue;
+			}
+			filtered.push(token);
+		}
+		remaining = filtered.join(" ").trim();
+	}
 
 	// Extract color (from the end)
 	const colorMatch = remaining.match(/#\w+\s*$/);
@@ -161,6 +175,7 @@ export function parseEventInput(input: string): ParsedEventInput {
 		startTime,
 		endTime,
 		color,
+		googleMeet,
 	};
 }
 
@@ -170,8 +185,11 @@ export function reconstructEventInput(event: {
 	startTime?: number;
 	endTime?: number;
 	color: ColorName;
+	googleMeet?: boolean;
+	conferenceUrl?: string;
 }): string {
 	const parts: string[] = [event.title];
+	const includeMeet = event.googleMeet ?? Boolean(event.conferenceUrl);
 
 	if (event.startTime !== undefined) {
 		if (event.endTime !== undefined) {
@@ -183,6 +201,10 @@ export function reconstructEventInput(event: {
 
 	if (event.color !== "gray") {
 		parts.push(`#${event.color}`);
+	}
+
+	if (includeMeet) {
+		parts.push("!g");
 	}
 
 	return parts.join(" ");
