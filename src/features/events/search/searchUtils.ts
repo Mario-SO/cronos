@@ -8,6 +8,7 @@ export type SearchEntry =
 			title: string;
 			color: CalendarEvent["color"];
 			count: number;
+			hasLink: boolean;
 			latest: CalendarEvent;
 	  };
 
@@ -80,6 +81,7 @@ export function groupEventsForSearch(events: CalendarEvent[]): SearchEntry[] {
 			title: latest.title,
 			color: latest.color,
 			count: groupEvents.length,
+			hasLink: groupEvents.some((event) => Boolean(event.conferenceUrl)),
 			latest,
 		});
 	}

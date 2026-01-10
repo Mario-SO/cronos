@@ -1,7 +1,7 @@
-import { spawn } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import { createServer } from "node:http";
 import { URL } from "node:url";
+import { openBrowser } from "@shared/openBrowser";
 import type { CalendarEvent, GoogleSettings } from "@shared/types";
 import { Effect } from "effect";
 
@@ -38,22 +38,6 @@ function createCodeVerifier(): string {
 function createCodeChallenge(verifier: string): string {
 	const digest = createHash("sha256").update(verifier).digest();
 	return base64UrlEncode(digest);
-}
-
-function openBrowser(url: string): void {
-	const platform = process.platform;
-	if (platform === "darwin") {
-		spawn("open", [url], { stdio: "ignore", detached: true }).unref();
-		return;
-	}
-	if (platform === "win32") {
-		spawn("cmd", ["/c", "start", "", url], {
-			stdio: "ignore",
-			detached: true,
-		}).unref();
-		return;
-	}
-	spawn("xdg-open", [url], { stdio: "ignore", detached: true }).unref();
 }
 
 export const startGoogleOAuth = () =>
@@ -126,7 +110,7 @@ export const startGoogleOAuth = () =>
 		authUrl.searchParams.set("code_challenge", codeChallenge);
 		authUrl.searchParams.set("code_challenge_method", "S256");
 
-		openBrowser(authUrl.toString());
+		yield* openBrowser(authUrl.toString());
 
 		const code = yield* Effect.tryPromise(() => codePromise);
 		const tokenResponse = yield* Effect.tryPromise(() =>

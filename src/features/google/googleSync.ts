@@ -50,6 +50,14 @@ interface GoogleEvent {
 	updated?: string;
 	etag?: string;
 	recurringEventId?: string;
+	hangoutLink?: string;
+	conferenceData?: {
+		entryPoints?: Array<{
+			entryPointType?: string;
+			uri?: string;
+			label?: string;
+		}>;
+	};
 }
 
 interface GoogleEventListResponse {
@@ -170,6 +178,15 @@ function parseGoogleDate(event: GoogleEvent): string | null {
 	return null;
 }
 
+function getConferenceUrl(event: GoogleEvent): string | undefined {
+	const entryPoints = event.conferenceData?.entryPoints ?? [];
+	const videoEntry = entryPoints.find(
+		(entry) => entry.entryPointType === "video" && entry.uri,
+	);
+	const anyEntry = entryPoints.find((entry) => entry.uri);
+	return videoEntry?.uri ?? anyEntry?.uri ?? event.hangoutLink ?? undefined;
+}
+
 function canWriteCalendar(accessRole?: string): boolean {
 	return accessRole === "owner" || accessRole === "writer";
 }
@@ -226,6 +243,7 @@ function buildLocalEventFromGoogle(
 		googleEventId: event.id,
 		googleCalendarId: calendarId,
 		googleEtag: event.etag ?? undefined,
+		conferenceUrl: getConferenceUrl(event),
 		updatedAt: toIso(event.updated) ?? new Date().toISOString(),
 	};
 }
@@ -323,6 +341,7 @@ const listGoogleEvents = (
 			singleEvents: "true",
 			maxResults: `${MAX_RESULTS}`,
 			showDeleted: "true",
+			conferenceDataVersion: "1",
 		};
 		if (syncToken) {
 			params.syncToken = syncToken;
@@ -519,6 +538,7 @@ const syncCalendar = (
 					title: mapped.title,
 					color: mapped.color,
 					googleEtag: mapped.googleEtag,
+					conferenceUrl: mapped.conferenceUrl,
 					updatedAt: mapped.updatedAt,
 				});
 				touchedLocalIds.add(local.id);

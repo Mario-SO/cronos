@@ -5,6 +5,7 @@ export interface AgendaCommandHandlers {
 	moveSelection: (delta: number) => void;
 	editSelection: () => void;
 	deleteSelection: () => void;
+	openLink: () => void;
 }
 
 export interface AddModalCommandHandlers {

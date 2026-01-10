@@ -12,6 +12,7 @@ interface EventRow {
 	google_event_id: string | null;
 	google_calendar_id: string | null;
 	google_etag: string | null;
+	conference_url: string | null;
 	created_at: string;
 	updated_at: string;
 }
@@ -30,6 +31,7 @@ function rowToEvent(row: EventRow): CalendarEvent {
 		googleEventId: row.google_event_id ?? undefined,
 		googleCalendarId: row.google_calendar_id ?? undefined,
 		googleEtag: row.google_etag ?? undefined,
+		conferenceUrl: row.conference_url ?? undefined,
 		updatedAt: row.updated_at ?? undefined,
 	};
 }
@@ -52,9 +54,10 @@ export const insertEvent = (event: CalendarEvent) =>
 				google_event_id,
 				google_calendar_id,
 				google_etag,
+				conference_url,
 				updated_at
 			)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`);
 		stmt.run(
 			event.id,
@@ -66,6 +69,7 @@ export const insertEvent = (event: CalendarEvent) =>
 			event.googleEventId ?? null,
 			event.googleCalendarId ?? null,
 			event.googleEtag ?? null,
+			event.conferenceUrl ?? null,
 			now,
 		);
 	});
@@ -115,6 +119,10 @@ export const updateEventById = (
 		if ("googleEtag" in updates) {
 			setClauses.push("google_etag = ?");
 			values.push(updates.googleEtag ?? null);
+		}
+		if ("conferenceUrl" in updates) {
+			setClauses.push("conference_url = ?");
+			values.push(updates.conferenceUrl ?? null);
 		}
 
 		if (setClauses.length === 0) {

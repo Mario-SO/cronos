@@ -98,6 +98,18 @@ const MIGRATIONS: Migration[] = [
 			}
 		},
 	},
+	{
+		version: 4,
+		up: (db) => {
+			const eventColumns = db.query("PRAGMA table_info(events)").all() as {
+				name: string;
+			}[];
+			const eventColumnSet = new Set(eventColumns.map((col) => col.name));
+			if (!eventColumnSet.has("conference_url")) {
+				db.run("ALTER TABLE events ADD COLUMN conference_url TEXT");
+			}
+		},
+	},
 ];
 
 /**
