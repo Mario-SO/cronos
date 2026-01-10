@@ -1,4 +1,5 @@
 import { Database } from "bun:sqlite";
+import { Effect, Schedule } from "effect";
 import { ensureDatabaseDir, getDatabasePath } from "./config";
 import { runMigrations } from "./migrations";
 
@@ -31,9 +32,42 @@ export function initDatabase(): void {
 
 	// Enable WAL mode for better concurrent read performance
 	db.run("PRAGMA journal_mode = WAL");
+	db.run("PRAGMA busy_timeout = 5000");
 
 	// Run any pending migrations
 	runMigrations(db);
+}
+
+const SQLITE_BUSY_RETRY_LIMIT = 5;
+const SQLITE_BUSY_RETRY_BASE_DELAY = "50 millis";
+
+function isSqliteBusyError(error: unknown): boolean {
+	if (!error) return false;
+	if (error instanceof Error && error.message.includes("SQLITE_BUSY")) {
+		return true;
+	}
+	if (typeof error === "object" && "code" in error) {
+		return (error as { code?: string }).code === "SQLITE_BUSY";
+	}
+	return false;
+}
+
+const sqliteBusyRetrySchedule = Schedule.recurWhile(isSqliteBusyError).pipe(
+	Schedule.intersect(Schedule.exponential(SQLITE_BUSY_RETRY_BASE_DELAY)),
+	Schedule.intersect(Schedule.recurs(SQLITE_BUSY_RETRY_LIMIT)),
+);
+
+export function withDbWrite<A>(
+	run: (db: Database) => A,
+): Effect.Effect<A, Error> {
+	return Effect.retry(
+		Effect.try({
+			try: () => run(getDatabase()),
+			catch: (error) =>
+				error instanceof Error ? error : new Error(String(error)),
+		}),
+		sqliteBusyRetrySchedule,
+	);
 }
 
 /**

@@ -49,6 +49,7 @@ export function SyncSection({
 
 			<box style={{ flexDirection: "column", marginTop: 1 }}>
 				{googleOptions.map((option, index) => {
+					const prevOption = googleOptions[index - 1];
 					const isFocused =
 						focusArea === "fields" && index === googleOptionIndex;
 					const isAction = option.type === "action";
@@ -63,12 +64,18 @@ export function SyncSection({
 						option.type === "calendar"
 							? theme.eventColors[option.color]
 							: undefined;
+					const addGroupSpacing =
+						(option.type === "calendar" && prevOption?.type === "action") ||
+						(option.type === "action" &&
+							option.id === "connect" &&
+							prevOption?.type === "calendar");
 					return (
 						<box
 							key={option.id}
 							style={{
 								flexDirection: "row",
 								backgroundColor: isFocused ? ui.selection : undefined,
+								marginTop: addGroupSpacing ? 1 : 0,
 							}}
 						>
 							<text fg={canWrite === false ? ui.foregroundDim : fg}>

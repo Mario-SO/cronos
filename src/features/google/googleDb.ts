@@ -1,4 +1,4 @@
-import { getDatabase } from "@data/db";
+import { getDatabase, withDbWrite } from "@data/db";
 import type { ColorName } from "@shared/types";
 import { Effect } from "effect";
 
@@ -35,8 +35,7 @@ function rowToCalendar(row: GoogleCalendarRow): GoogleCalendarRecord {
 }
 
 export const upsertGoogleCalendar = (calendar: GoogleCalendarRecord) =>
-	Effect.sync(() => {
-		const db = getDatabase();
+	withDbWrite((db) => {
 		const stmt = db.prepare(`
 			INSERT INTO google_calendars (
 				calendar_id,
@@ -94,8 +93,7 @@ export const setGoogleCalendarEnabled = (
 	calendarId: string,
 	enabled: boolean,
 ) =>
-	Effect.sync(() => {
-		const db = getDatabase();
+	withDbWrite((db) => {
 		const stmt = db.prepare(
 			"UPDATE google_calendars SET enabled = ?, updated_at = ? WHERE calendar_id = ?",
 		);
@@ -107,8 +105,7 @@ export const updateGoogleCalendarSyncState = (
 	syncToken: string | null,
 	lastSyncAt: string | null,
 ) =>
-	Effect.sync(() => {
-		const db = getDatabase();
+	withDbWrite((db) => {
 		const stmt = db.prepare(
 			"UPDATE google_calendars SET sync_token = ?, last_sync_at = ?, updated_at = ? WHERE calendar_id = ?",
 		);
@@ -116,8 +113,7 @@ export const updateGoogleCalendarSyncState = (
 	});
 
 export const recordGoogleDeletion = (calendarId: string, eventId: string) =>
-	Effect.sync(() => {
-		const db = getDatabase();
+	withDbWrite((db) => {
 		const stmt = db.prepare(`
 			INSERT INTO google_event_deletions (calendar_id, event_id, deleted_at)
 			VALUES (?, ?, ?)
@@ -141,8 +137,7 @@ export const getGoogleDeletions = (calendarId: string) =>
 	});
 
 export const clearGoogleDeletion = (calendarId: string, eventId: string) =>
-	Effect.sync(() => {
-		const db = getDatabase();
+	withDbWrite((db) => {
 		const stmt = db.prepare(
 			"DELETE FROM google_event_deletions WHERE calendar_id = ? AND event_id = ?",
 		);

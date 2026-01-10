@@ -1,5 +1,6 @@
 import { closeDatabase, initDatabase } from "@data/db";
-import { getMaxEventIdCounter, insertEvent } from "@data/repository";
+import { insertEvent } from "@data/repository";
+import { generateEventId } from "@features/events/eventsStore";
 import { formatDateKey } from "@shared/dateUtils";
 import type { CalendarEvent, ColorName } from "@shared/types";
 import { Effect } from "effect";
@@ -63,10 +64,7 @@ function pickSeed<T>(list: readonly T[], index: number, label: string): T {
 	return value;
 }
 
-function makeEvent(
-	index: number,
-	counterRef: { value: number },
-): CalendarEvent {
+function makeEvent(index: number): CalendarEvent {
 	const [year, month, day] = pickSeed(DATE_SEEDS, index, "DATE_SEEDS");
 	const dateKey = formatDateKey(new Date(year, month, day));
 	const isAllDay = index % 5 === 0;
@@ -80,11 +78,8 @@ function makeEvent(
 		endTime = Math.min(startBase + duration, 23 * 60 + 45);
 	}
 
-	counterRef.value += 1;
-	const id = `event-${counterRef.value}-${Date.now()}-${index}`;
-
 	return {
-		id,
+		id: generateEventId(),
 		date: dateKey,
 		title: `${TITLES[index % TITLES.length]} ${index + 1}`,
 		startTime,
@@ -96,12 +91,11 @@ function makeEvent(
 function main(): void {
 	initDatabase();
 
-	const counterRef = { value: Effect.runSync(getMaxEventIdCounter()) };
 	const events: CalendarEvent[] = [];
 	const count = 20;
 
 	for (let i = 0; i < count; i++) {
-		events.push(makeEvent(i, counterRef));
+		events.push(makeEvent(i));
 	}
 
 	for (const event of events) {

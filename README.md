@@ -29,7 +29,7 @@ cronos list
 cronos list --date 2025-04-10
 cronos next
 cronos add --date 2025-04-10 "Lunch 12pm-1pm #green"
-cronos delete --id event-12-1713456789
+cronos delete --id event-<uuid>
 ```
 
 ## Keyboard Shortcuts

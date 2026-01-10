@@ -4,11 +4,11 @@ import {
 	findEventByGoogleId,
 	findEventsMissingGoogleId,
 	findEventsUpdatedAfter,
-	getMaxEventIdCounter,
 	insertEvent,
 	updateEventById,
 } from "@data/repository";
 import { initEventStore } from "@features/events/eventsState";
+import { generateEventId } from "@features/events/eventsStore";
 import {
 	clearGoogleDeletion,
 	getEnabledGoogleCalendars,
@@ -24,7 +24,6 @@ import { Effect } from "effect";
 import {
 	refreshGoogleToken,
 	startGoogleOAuth,
-	toGoogleAllDayEvent,
 	toGoogleEvent,
 } from "./googleApi";
 
@@ -388,7 +387,7 @@ const createGoogleEvent = (
 	never
 > =>
 	Effect.gen(function* () {
-		const body = toGoogleAllDayEvent(event);
+		const body = toGoogleEvent(event);
 		const { data } = yield* googleRequestJson<GoogleEvent>(
 			accessToken,
 			`/calendars/${encodeURIComponent(calendarId)}/events`,
@@ -466,7 +465,7 @@ const updateGoogleEvent = (
 	event: CalendarEvent,
 ): Effect.Effect<{ etag?: string; updated?: string }, Error, never> =>
 	Effect.gen(function* () {
-		const body = toGoogleAllDayEvent(event);
+		const body = toGoogleEvent(event);
 		const { data } = yield* googleRequestJson<GoogleEvent>(
 			accessToken,
 			`/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(
@@ -524,8 +523,6 @@ const syncCalendar = (
 		let activeSyncToken =
 			canWrite && !forceRefresh ? (syncToken ?? null) : null;
 		const touchedLocalIds = new Set<string>();
-		const localCounterStart = yield* getMaxEventIdCounter();
-		let localCounter = localCounterStart;
 
 		const processEvent = (event: GoogleEvent) =>
 			Effect.gen(function* () {
@@ -570,10 +567,9 @@ const syncCalendar = (
 				}
 
 				if (!local) {
-					localCounter += 1;
 					const newEvent: CalendarEvent = {
 						...mapped,
-						id: `event-${localCounter}-${Date.now()}`,
+						id: generateEventId(),
 					};
 					yield* insertEvent(newEvent);
 					touchedLocalIds.add(newEvent.id);

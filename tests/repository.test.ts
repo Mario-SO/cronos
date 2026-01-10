@@ -13,7 +13,6 @@ import {
 	deleteEventById,
 	findAllEvents,
 	findEventsByDate,
-	getMaxEventIdCounter,
 	insertEvent,
 	updateEventById,
 } from "@data/repository";
@@ -553,59 +552,6 @@ describe("Repository CRUD Operations", () => {
 
 			const events = Effect.runSync(findAllEvents());
 			expect(events).toHaveLength(0);
-		});
-	});
-
-	describe("getMaxEventIdCounter", () => {
-		test("returns 0 when no events exist", () => {
-			const maxCounter = Effect.runSync(getMaxEventIdCounter());
-			expect(maxCounter).toBe(0);
-		});
-
-		test("returns the highest counter from event IDs", () => {
-			const event1 = createTestEvent({ id: "event-5-1234567890" });
-			const event2 = createTestEvent({ id: "event-10-1234567890" });
-			const event3 = createTestEvent({ id: "event-3-1234567890" });
-
-			Effect.runSync(insertEvent(event1));
-			Effect.runSync(insertEvent(event2));
-			Effect.runSync(insertEvent(event3));
-
-			const maxCounter = Effect.runSync(getMaxEventIdCounter());
-			expect(maxCounter).toBe(10);
-		});
-
-		test("handles single event", () => {
-			const event = createTestEvent({ id: "event-42-1234567890" });
-			Effect.runSync(insertEvent(event));
-
-			const maxCounter = Effect.runSync(getMaxEventIdCounter());
-			expect(maxCounter).toBe(42);
-		});
-
-		test("ignores events with non-standard ID format", () => {
-			const event1 = createTestEvent({ id: "event-5-1234567890" });
-			const event2 = createTestEvent({ id: "custom-id" });
-
-			Effect.runSync(insertEvent(event1));
-			Effect.runSync(insertEvent(event2));
-
-			const maxCounter = Effect.runSync(getMaxEventIdCounter());
-			expect(maxCounter).toBe(5);
-		});
-
-		test("updates after deleting the max counter event", () => {
-			const event1 = createTestEvent({ id: "event-5-1234567890" });
-			const event2 = createTestEvent({ id: "event-10-1234567890" });
-
-			Effect.runSync(insertEvent(event1));
-			Effect.runSync(insertEvent(event2));
-
-			// Delete the event with highest counter
-			Effect.runSync(deleteEventById("event-10-1234567890"));
-
-			const maxCounter = Effect.runSync(getMaxEventIdCounter());
-			expect(maxCounter).toBe(5);
 		});
 	});
 

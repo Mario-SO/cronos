@@ -53,8 +53,6 @@ export function CalendarSection({
 					})}
 				</box>
 			</box>
-
-			<text fg={ui.foregroundDim}>Saved: {appliedWeekStartLabel}</text>
 		</>
 	);
 }
