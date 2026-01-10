@@ -1,6 +1,6 @@
 {
 	"name": "@tuis/cronos",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"description": "A terminal calendar app built with OpenTUI.",
 	"module": "src/app/index.tsx",
 	"type": "module",
