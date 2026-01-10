@@ -86,33 +86,34 @@ export function SettingsModal() {
 	const googleOptions = useMemo<GoogleOption[]>(() => {
 		const isConnected = settings.google.connected;
 		const isSyncing = googleState.status === "syncing" && isConnected;
-		const options: GoogleOption[] = [
-			{
-				type: "action",
-				id: "connect",
-				label: isConnected ? "Disconnect Google" : "Connect Google",
-				disabled: isConnected ? false : isSyncing,
-			},
-			{
-				type: "action",
-				id: "sync",
-				label: "Sync now",
-				disabled: !isConnected || isSyncing,
-			},
-			...(isConnected
-				? googleState.calendars.map(
-						(calendar): GoogleOption => ({
-							type: "calendar",
-							id: `calendar:${calendar.calendarId}`,
-							label: `${calendar.summary}${calendar.canWrite ? "" : " (read-only)"}`,
-							calendarId: calendar.calendarId,
-							enabled: calendar.enabled,
-							color: calendar.color,
-							canWrite: calendar.canWrite,
-						}),
-					)
-				: []),
-		];
+		const connectOption: GoogleOption = {
+			type: "action",
+			id: "connect",
+			label: isConnected ? "Disconnect Google" : "Connect Google",
+			disabled: isConnected ? false : isSyncing,
+		};
+		const syncOption: GoogleOption = {
+			type: "action",
+			id: "sync",
+			label: "Sync now",
+			disabled: !isConnected || isSyncing,
+		};
+		const calendarOptions = isConnected
+			? googleState.calendars.map(
+					(calendar): GoogleOption => ({
+						type: "calendar",
+						id: `calendar:${calendar.calendarId}`,
+						label: `${calendar.summary}${calendar.canWrite ? "" : " (read-only)"}`,
+						calendarId: calendar.calendarId,
+						enabled: calendar.enabled,
+						color: calendar.color,
+						canWrite: calendar.canWrite,
+					}),
+				)
+			: [];
+		const options: GoogleOption[] = isConnected
+			? [syncOption, ...calendarOptions, connectOption]
+			: [connectOption, syncOption];
 		return options;
 	}, [googleState.calendars, googleState.status, settings.google.connected]);
 
@@ -162,13 +163,6 @@ export function SettingsModal() {
 		draftNotificationsEnabled !== settings.notificationsEnabled ||
 		normalizedNotificationMinutes !== settings.notificationLeadMinutes ||
 		draftTheme !== settings.themeId;
-	const appliedWeekStartLabel = useMemo(
-		() =>
-			WEEK_START_OPTIONS.find((option) => option.id === settings.weekStartDay)
-				?.label ?? "Mon",
-		[settings.weekStartDay],
-	);
-
 	const handleNotificationMinutesInput = useCallback((value: string) => {
 		const sanitized = value.replace(/[^0-9]/g, "");
 		setDraftNotificationMinutes(sanitized);
@@ -485,7 +479,6 @@ export function SettingsModal() {
 							weekStartIndex={weekStartIndex}
 							weekStartOptions={WEEK_START_OPTIONS}
 							labelWidth={labelWidth}
-							appliedWeekStartLabel={appliedWeekStartLabel}
 						/>
 					) : activeSection === "notifications" ? (
 						<NotificationsSection

@@ -1,14 +1,12 @@
 import {
 	deleteEventById,
 	findAllEvents,
-	getMaxEventIdCounter,
 	insertEvent,
 	updateEventById,
 } from "@data/repository";
 import type { CalendarEvent } from "@shared/types";
 
 export const loadAllEvents = findAllEvents;
-export const loadMaxEventIdCounter = getMaxEventIdCounter;
 
 export const persistEventCreate = (event: CalendarEvent) => insertEvent(event);
 

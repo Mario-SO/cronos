@@ -1,6 +1,6 @@
 import type { CalendarEvent, ColorName } from "@shared/types";
 import { Effect } from "effect";
-import { getDatabase } from "./db";
+import { getDatabase, withDbWrite } from "./db";
 
 interface EventRow {
 	id: string;
@@ -64,8 +64,7 @@ function rowToEvent(row: EventRow): CalendarEvent {
  * Insert a new event into the database.
  */
 export const insertEvent = (event: CalendarEvent) =>
-	Effect.sync(() => {
-		const db = getDatabase();
+	withDbWrite((db) => {
 		const now = event.updatedAt ?? new Date().toISOString();
 		const stmt = db.prepare(`
 			INSERT INTO events (
@@ -107,9 +106,7 @@ export const updateEventById = (
 	id: string,
 	updates: Partial<Omit<CalendarEvent, "id">>,
 ) =>
-	Effect.sync(() => {
-		const db = getDatabase();
-
+	withDbWrite((db) => {
 		// Build dynamic update query based on provided fields
 		const setClauses: string[] = [];
 		const values: (string | number | null)[] = [];
@@ -177,8 +174,7 @@ export const updateEventById = (
  * Returns true if an event was deleted, false otherwise.
  */
 export const deleteEventById = (id: string) =>
-	Effect.sync(() => {
-		const db = getDatabase();
+	withDbWrite((db) => {
 		const stmt = db.prepare("DELETE FROM events WHERE id = ?");
 		const result = stmt.run(id);
 		return result.changes > 0;
@@ -253,28 +249,4 @@ export const findEventsMissingGoogleId = () =>
 		);
 		const rows = stmt.all() as EventRow[];
 		return rows.map(rowToEvent);
-	});
-
-/**
- * Get the highest event ID counter value from existing events.
- * Used to restore the counter on app startup.
- */
-export const getMaxEventIdCounter = () =>
-	Effect.sync(() => {
-		const db = getDatabase();
-		const stmt = db.prepare("SELECT id FROM events");
-		const rows = stmt.all() as { id: string }[];
-
-		let maxCounter = 0;
-		for (const row of rows) {
-			// Parse event IDs like "event-123-1234567890"
-			const match = row.id.match(/^event-(\d+)-/);
-			if (match?.[1]) {
-				const counter = parseInt(match[1], 10);
-				if (counter > maxCounter) {
-					maxCounter = counter;
-				}
-			}
-		}
-		return maxCounter;
 	});

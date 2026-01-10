@@ -1,4 +1,4 @@
-import { getAllEvents } from "@features/events/eventsState";
+import { findAllEvents } from "@data/repository";
 import type { CalendarEvent } from "@shared/types";
 import { Effect } from "effect";
 import { formatEventLine } from "../format";
@@ -57,7 +57,7 @@ export function runList(options: ListOptions): void {
 		return;
 	}
 
-	const allEvents = Effect.runSync(getAllEvents);
+	const allEvents = Effect.runSync(findAllEvents());
 	const filtered = date
 		? allEvents.filter((event) => event.date === date)
 		: filterByRange(allEvents, from, to);
