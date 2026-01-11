@@ -155,3 +155,5 @@ export const calendarCommands = [
 - [x] Search through event list
 - [x] Agenda side view
 - [x] Yearly view
+
+⚠️ Disclaimer: To use the app, you will need to personally DM me at @mariodev__ on x.com or email cronos@m5o.slmail.me because Google is currently verifying the app for public usage.
